@@ -1,4 +1,4 @@
-# Đồ án Đức Anh — Quản lý bệnh án và kê đơn (Java thuần + SQLite)
+#Quản lý bệnh án và kê đơn (Java thuần + SQLite)
 
 ## Công nghệ
 - Giao diện prototype giữ nguyên: HTML, CSS, JavaScript (đã tách 3 file)
