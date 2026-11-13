@@ -59,3 +59,7 @@ tr:nth-child(even) td{background:var(--pl)}
 /* Placeholder cua dropdown: chi hien trong o, khong nam trong danh sach tuy chon */
 select:required:invalid { color: #82979b; }
 select option { color: var(--tx); }
+
+/* Màn hình demo cho lễ tân và quản trị */
+.demo-note{background:#fff8e6;border:1px solid #e8c477;color:#78540b;padding:10px 12px;margin-bottom:16px;font-size:13px}
+select:required:invalid{color:#82979b}
