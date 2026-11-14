@@ -41,12 +41,13 @@ public class ApiServlet extends HttpServlet {
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
-            send(resp, 500, Map.of("error", "Không đọc được SQLite. Xem log Java và kiểm tra quyền ghi thư mục data."));
+            send(resp, 500, Map.of("error", "Không đọc được PostgreSQL. Kiểm tra container (docker compose ps) và log Java."));
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        req.setCharacterEncoding("UTF-8");   // fetch() không gửi charset; không đặt sẽ bị đọc sai tiếng Việt
         try {
             if (req.getContentLengthLong() > 1024 * 1024) throw new InputError("Dữ liệu quá lớn");
             JsonObject body = JsonParser.parseReader(req.getReader()).getAsJsonObject();
@@ -62,10 +63,10 @@ public class ApiServlet extends HttpServlet {
             if ("/drugs".equals(req.getPathInfo())) { databaseError(resp, ex); return; }
             ex.printStackTrace();
             String state = ex.getSQLState();
-            if ((state != null && state.startsWith("23")) || ex.getMessage().toUpperCase().contains("CONSTRAINT")) {
+            if (state != null && state.startsWith("23")) {
                 send(resp, 409, Map.of("error", "Bệnh nhân/bệnh án không tồn tại hoặc bệnh án đã có đơn thuốc."));
             } else {
-                send(resp, 500, Map.of("error", "Lỗi SQLite khi lưu dữ liệu. Xem terminal backend."));
+                send(resp, 500, Map.of("error", "Lỗi PostgreSQL khi lưu dữ liệu. Xem terminal backend."));
             }
         } catch (RuntimeException ex) {
             send(resp, 400, Map.of("error", "JSON không hợp lệ"));
@@ -74,6 +75,7 @@ public class ApiServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        req.setCharacterEncoding("UTF-8");
         try {
             int id = drugIdFromPath(req.getPathInfo());
             JsonObject body = JsonParser.parseReader(req.getReader()).getAsJsonObject();
@@ -108,16 +110,20 @@ public class ApiServlet extends HttpServlet {
 
     private static void databaseError(HttpServletResponse resp, SQLException ex) throws IOException {
         ex.printStackTrace();
-        if (ex.getMessage() != null && ex.getMessage().toUpperCase().contains("UNIQUE")) {
+        if ("23505".equals(ex.getSQLState())) {            // unique_violation
             send(resp, 409, Map.of("error", "Tên thuốc đã có trong danh mục."));
+        } else if ("23503".equals(ex.getSQLState())) {     // foreign_key_violation
+            send(resp, 409, Map.of("error", "Thuốc đã được kê trong đơn thuốc nên không thể xóa."));
         } else {
-            send(resp, 500, Map.of("error", "Lỗi SQLite khi quản lý thuốc. Xem terminal."));
+            send(resp, 500, Map.of("error", "Lỗi PostgreSQL khi quản lý thuốc. Xem terminal."));
         }
     }
 
+    private static String nz(String v) { return v == null ? "" : v; }
+
     private static List<Map<String, Object>> readDrugs(Connection c) throws SQLException {
         List<Map<String, Object>> drugs = new ArrayList<>();
-        try (PreparedStatement p = c.prepareStatement("SELECT id,ten_thuoc FROM thuoc ORDER BY ten_thuoc COLLATE NOCASE");
+        try (PreparedStatement p = c.prepareStatement("SELECT ma_thuoc, ten_thuoc FROM thuoc ORDER BY lower(ten_thuoc)");
              ResultSet r = p.executeQuery()) {
             while (r.next()) drugs.add(Map.of("id", r.getInt(1), "name", r.getString(2)));
         }
@@ -126,11 +132,12 @@ public class ApiServlet extends HttpServlet {
 
     private Map<String, Object> createDrug(JsonObject body) throws SQLException {
         String name = required(body, "name", 100);
+        // Bảng thuoc (thiết kế nhóm) còn đơn vị tính / đơn giá / tồn kho: dùng giá trị mặc định, cập nhật sau.
         try (Connection c = Database.connect();
-             PreparedStatement p = c.prepareStatement("INSERT INTO thuoc(ten_thuoc) VALUES (?)")) {
+             PreparedStatement p = c.prepareStatement(
+                 "INSERT INTO thuoc(ten_thuoc, don_vi_tinh, don_gia, so_luong_ton) VALUES (?, 'Viên', 0, 0) RETURNING ma_thuoc")) {
             p.setString(1, name);
-            p.executeUpdate();
-            try (Statement s = c.createStatement(); ResultSet ids = s.executeQuery("SELECT last_insert_rowid()")) {
+            try (ResultSet ids = p.executeQuery()) {
                 ids.next();
                 return Map.of("id", ids.getInt(1), "name", name);
             }
@@ -140,7 +147,7 @@ public class ApiServlet extends HttpServlet {
     private Map<String, Object> updateDrug(int id, JsonObject body) throws SQLException {
         String name = required(body, "name", 100);
         try (Connection c = Database.connect();
-             PreparedStatement p = c.prepareStatement("UPDATE thuoc SET ten_thuoc=? WHERE id=?")) {
+             PreparedStatement p = c.prepareStatement("UPDATE thuoc SET ten_thuoc=? WHERE ma_thuoc=?")) {
             p.setString(1, name);
             p.setInt(2, id);
             if (p.executeUpdate() == 0) throw new InputError("Không tìm thấy thuốc cần sửa.");
@@ -150,7 +157,7 @@ public class ApiServlet extends HttpServlet {
 
     private void deleteDrug(int id) throws SQLException {
         try (Connection c = Database.connect();
-             PreparedStatement p = c.prepareStatement("DELETE FROM thuoc WHERE id=?")) {
+             PreparedStatement p = c.prepareStatement("DELETE FROM thuoc WHERE ma_thuoc=?")) {
             p.setInt(1, id);
             if (p.executeUpdate() == 0) throw new InputError("Không tìm thấy thuốc cần xóa.");
         }
@@ -164,43 +171,51 @@ public class ApiServlet extends HttpServlet {
         List<Map<String, Object>> drugItems;
         try (Connection c = Database.connect()) {
             drugItems = readDrugs(c);
-            try (PreparedStatement p = c.prepareStatement("SELECT id, ho_ten FROM benh_nhan ORDER BY id");
+            try (PreparedStatement p = c.prepareStatement("SELECT ma_bn, ho_ten, ngay_sinh, gioi_tinh FROM benh_nhan ORDER BY ma_bn");
                  ResultSet r = p.executeQuery()) {
                 while (r.next()) {
-                    patients.add(Map.of("id", r.getString(1), "n", r.getString(2), "dob", "", "g", "—"));
+                    java.sql.Date dob = r.getDate(3);
+                    patients.add(Map.of("id", patientCode(r.getInt(1)), "n", r.getString(2),
+                            "dob", dob == null ? "" : dob.toString(),
+                            "g", r.getString(4) == null ? "—" : r.getString(4)));
                 }
             }
             try (PreparedStatement p = c.prepareStatement(
-                    "SELECT id,benh_nhan_id,ngay_kham,trieu_chung,chan_doan,ghi_chu FROM benh_an ORDER BY id DESC");
+                    "SELECT ba.ma_ba, ba.ma_bn, lk.ngay_gio_kham::date, ba.trieu_chung, ba.chan_doan, ba.ghi_chu "
+                    + "FROM benh_an ba JOIN lich_kham lk ON lk.ma_lk = ba.ma_lk ORDER BY ba.ma_ba DESC");
                  ResultSet r = p.executeQuery()) {
                 while (r.next()) {
                     Map<String, Object> item = new LinkedHashMap<>();
                     item.put("id", recordCode(r.getInt(1)));
-                    item.put("pid", r.getString(2));
-                    item.put("date", r.getString(3));
-                    item.put("sym", r.getString(4));
-                    item.put("dx", r.getString(5));
-                    item.put("note", r.getString(6) == null ? "" : r.getString(6));
+                    item.put("pid", patientCode(r.getInt(2)));
+                    item.put("date", r.getDate(3).toString());
+                    item.put("sym", nz(r.getString(4)));
+                    item.put("dx", nz(r.getString(5)));
+                    item.put("note", nz(r.getString(6)));
                     records.add(item);
                 }
             }
             try (PreparedStatement p = c.prepareStatement(
-                    "SELECT id,don_thuoc_id,ten_thuoc,lieu_dung,so_luong,cach_dung FROM chi_tiet_don ORDER BY id");
+                    "SELECT ct.ma_dt, t.ten_thuoc, ct.lieu_dung, ct.tan_suat, ct.so_luong, ct.cach_dung "
+                    + "FROM chi_tiet_don_thuoc ct JOIN thuoc t ON t.ma_thuoc = ct.ma_thuoc ORDER BY ct.ma_dt, ct.ma_thuoc");
                  ResultSet r = p.executeQuery()) {
                 while (r.next()) {
-                    linesByRx.computeIfAbsent(r.getInt(2), k -> new ArrayList<>()).add(Map.of(
-                        "d", r.getString(3), "dose", r.getString(4), "qty", r.getInt(5), "use", r.getString(6)));
+                    String dose = nz(r.getString(3));
+                    String freq = nz(r.getString(4));
+                    if (!freq.isEmpty()) dose = dose.isEmpty() ? freq : dose + ", " + freq;
+                    linesByRx.computeIfAbsent(r.getInt(1), k -> new ArrayList<>()).add(Map.of(
+                        "d", r.getString(2), "dose", dose, "qty", r.getInt(5), "use", nz(r.getString(6))));
                 }
             }
             try (PreparedStatement p = c.prepareStatement(
-                    "SELECT id,benh_an_id,ngay_ke FROM don_thuoc ORDER BY id DESC");
+                    "SELECT ma_dt, ma_ba, ngay_ke::date FROM don_thuoc ORDER BY ma_dt DESC");
                  ResultSet r = p.executeQuery()) {
                 while (r.next()) {
                     Map<String, Object> item = new LinkedHashMap<>();
                     int id = r.getInt(1);
                     item.put("id", prescriptionCode(id));
                     item.put("rid", recordCode(r.getInt(2)));
-                    item.put("date", r.getString(3));
+                    item.put("date", r.getDate(3).toString());
                     item.put("lines", linesByRx.getOrDefault(id, List.of()));
                     prescriptions.add(item);
                 }
@@ -211,41 +226,68 @@ public class ApiServlet extends HttpServlet {
                       "recs", records, "rx", prescriptions);
     }
 
+    /**
+     * Lập bệnh án = gắn với MỘT lịch khám (benh_an.ma_lk NOT NULL UNIQUE trong thiết kế nhóm):
+     * lấy lịch khám chưa hủy, chưa có bệnh án của bệnh nhân đúng ngày chọn, rồi đánh dấu lịch 'Đã khám'.
+     */
     private Map<String, String> addRecord(JsonObject body) throws SQLException {
-        String pid = required(body, "pid", 20);
+        int patientId = parseCode(required(body, "pid", 20), "BN", "Mã bệnh nhân không hợp lệ");
         LocalDate date = date(required(body, "date", 10));
         String symptoms = required(body, "sym", 5000);
         String diagnosis = required(body, "dx", 5000);
         String note = optional(body, "note", 5000);
-        String sql = "INSERT INTO benh_an(benh_nhan_id,ngay_kham,trieu_chung,chan_doan,ghi_chu) VALUES (?,?,?,?,?)";
-        try (Connection c = Database.connect();
-             PreparedStatement p = c.prepareStatement(sql, Statement.NO_GENERATED_KEYS)) {
-            p.setString(1, pid);
-            p.setString(2, date.toString());
-            p.setString(3, symptoms);
-            p.setString(4, diagnosis);
-            p.setString(5, note);
-            p.executeUpdate();
-            try (Statement ids = c.createStatement(); ResultSet keys = ids.executeQuery("SELECT last_insert_rowid()")) {
-                if (!keys.next()) throw new SQLException("Không tạo được mã bệnh án");
-                return Map.of("id", recordCode(keys.getInt(1)));
+        try (Connection c = Database.connect()) {
+            c.setAutoCommit(false);
+            try {
+                int lk = -1;
+                try (PreparedStatement p = c.prepareStatement(
+                        "SELECT lk.ma_lk FROM lich_kham lk WHERE lk.ma_bn = ? AND lk.ngay_gio_kham::date = ? "
+                        + "AND lk.trang_thai <> 'Đã hủy' "
+                        + "AND NOT EXISTS (SELECT 1 FROM benh_an b WHERE b.ma_lk = lk.ma_lk) "
+                        + "ORDER BY lk.ngay_gio_kham LIMIT 1 FOR UPDATE")) {
+                    p.setInt(1, patientId);
+                    p.setDate(2, java.sql.Date.valueOf(date));
+                    try (ResultSet r = p.executeQuery()) { if (r.next()) lk = r.getInt(1); }
+                }
+                if (lk < 0) throw new InputError("Bệnh nhân chưa có lịch khám (còn trống bệnh án) vào ngày "
+                        + date + ". Hãy đặt lịch khám trước hoặc chọn đúng ngày của lịch.");
+                int id;
+                try (PreparedStatement p = c.prepareStatement(
+                        "INSERT INTO benh_an(ma_lk, ma_bn, trieu_chung, chan_doan, ghi_chu) VALUES (?,?,?,?,?) RETURNING ma_ba")) {
+                    p.setInt(1, lk);
+                    p.setInt(2, patientId);
+                    p.setString(3, symptoms);
+                    p.setString(4, diagnosis);
+                    p.setString(5, note.isEmpty() ? null : note);
+                    try (ResultSet keys = p.executeQuery()) {
+                        if (!keys.next()) throw new SQLException("Không tạo được mã bệnh án");
+                        id = keys.getInt(1);
+                    }
+                }
+                try (PreparedStatement p = c.prepareStatement("UPDATE lich_kham SET trang_thai = 'Đã khám' WHERE ma_lk = ?")) {
+                    p.setInt(1, lk);
+                    p.executeUpdate();
+                }
+                c.commit();
+                return Map.of("id", recordCode(id));
+            } catch (SQLException | RuntimeException ex) {
+                c.rollback();
+                throw ex;
             }
         }
     }
 
     private Map<String, String> addPrescription(JsonObject body) throws SQLException {
-        int recordId = parseCode(required(body, "rid", 20), "BA");
+        int recordId = parseCode(required(body, "rid", 20), "BA", "Mã bệnh án không hợp lệ");
         if (!body.has("lines") || !body.get("lines").isJsonArray()) throw new InputError("Thiếu danh sách thuốc");
         JsonArray lines = body.getAsJsonArray("lines");
         if (lines.size() < 1 || lines.size() > 20) throw new InputError("Đơn thuốc phải có từ 1 đến 20 thuốc");
-        // Validate all lines before touching the database.
+        // Kiểm tra toàn bộ dòng thuốc trước khi chạm vào database.
         List<Map<String, Object>> items = new ArrayList<>();
         for (int i = 0; i < lines.size(); i++) {
             JsonObject x = lines.get(i).getAsJsonObject();
             String drug = required(x, "d", 100);
-            // Validate against persisted medicine catalogue, not a hard-coded list.
-            // Checked again inside the transaction before inserting the prescription.
-            String dose = required(x, "dose", 150);
+            String dose = required(x, "dose", 100);
             String usage = required(x, "use", 150);
             if (!x.has("qty") || !x.get("qty").isJsonPrimitive()) throw new InputError("Thiếu số lượng thuốc");
             int quantity = x.get("qty").getAsInt();
@@ -255,29 +297,49 @@ public class ApiServlet extends HttpServlet {
         try (Connection c = Database.connect()) {
             c.setAutoCommit(false);
             try {
-                List<Map<String, Object>> available = readDrugs(c);
+                // Khóa dòng bệnh án để hai người không cùng kê đơn cho một bệnh án.
+                try (PreparedStatement p = c.prepareStatement("SELECT 1 FROM benh_an WHERE ma_ba = ? FOR UPDATE")) {
+                    p.setInt(1, recordId);
+                    try (ResultSet r = p.executeQuery()) {
+                        if (!r.next()) throw new InputError("Bệnh án không tồn tại.");
+                    }
+                }
+                try (PreparedStatement p = c.prepareStatement("SELECT 1 FROM don_thuoc WHERE ma_ba = ?")) {
+                    p.setInt(1, recordId);
+                    try (ResultSet r = p.executeQuery()) {
+                        if (r.next()) throw new InputError("Bệnh án này đã có đơn thuốc.");
+                    }
+                }
+                // Tên thuốc -> mã thuốc (chi_tiet_don_thuoc lưu khóa ngoại tới danh mục thuốc).
+                List<Integer> drugIds = new ArrayList<>();
                 for (Map<String, Object> item : items) {
-                    if (available.stream().noneMatch(x -> x.get("name").equals(item.get("d"))))
-                        throw new InputError("Thuốc không còn trong danh mục: " + item.get("d"));
+                    try (PreparedStatement p = c.prepareStatement("SELECT ma_thuoc FROM thuoc WHERE ten_thuoc = ?")) {
+                        p.setString(1, (String) item.get("d"));
+                        try (ResultSet r = p.executeQuery()) {
+                            if (!r.next()) throw new InputError("Thuốc không còn trong danh mục: " + item.get("d"));
+                            int id = r.getInt(1);
+                            if (drugIds.contains(id)) throw new InputError("Thuốc bị trùng trong đơn: " + item.get("d"));
+                            drugIds.add(id);
+                        }
+                    }
                 }
                 int rxId;
                 try (PreparedStatement p = c.prepareStatement(
-                        "INSERT INTO don_thuoc(benh_an_id,ngay_ke) VALUES (?,?)", Statement.NO_GENERATED_KEYS)) {
+                        "INSERT INTO don_thuoc(ma_ba) VALUES (?) RETURNING ma_dt")) {
                     p.setInt(1, recordId);
-                    p.setString(2, LocalDate.now().toString());
-                    p.executeUpdate();
-                    try (Statement ids = c.createStatement(); ResultSet keys = ids.executeQuery("SELECT last_insert_rowid()")) {
+                    try (ResultSet keys = p.executeQuery()) {
                         if (!keys.next()) throw new SQLException("Không tạo được mã đơn thuốc");
                         rxId = keys.getInt(1);
                     }
                 }
                 try (PreparedStatement p = c.prepareStatement(
-                        "INSERT INTO chi_tiet_don(don_thuoc_id,ten_thuoc,lieu_dung,so_luong,cach_dung) VALUES (?,?,?,?,?)")) {
-                    for (Map<String, Object> item : items) {
+                        "INSERT INTO chi_tiet_don_thuoc(ma_dt, ma_thuoc, so_luong, lieu_dung, cach_dung) VALUES (?,?,?,?,?)")) {
+                    for (int i = 0; i < items.size(); i++) {
+                        Map<String, Object> item = items.get(i);
                         p.setInt(1, rxId);
-                        p.setString(2, (String) item.get("d"));
-                        p.setString(3, (String) item.get("dose"));
-                        p.setInt(4, (Integer) item.get("qty"));
+                        p.setInt(2, drugIds.get(i));
+                        p.setInt(3, (Integer) item.get("qty"));
+                        p.setString(4, (String) item.get("dose"));
                         p.setString(5, (String) item.get("use"));
                         p.addBatch();
                     }
@@ -292,10 +354,11 @@ public class ApiServlet extends HttpServlet {
         }
     }
 
+    private static String patientCode(int id) { return String.format("BN%03d", id); }
     private static String recordCode(int id) { return String.format("BA%03d", id); }
     private static String prescriptionCode(int id) { return String.format("DT%03d", id); }
-    private static int parseCode(String code, String prefix) {
-        if (!code.matches(prefix + "[0-9]+")) throw new InputError("Mã bệnh án không hợp lệ");
+    private static int parseCode(String code, String prefix, String message) {
+        if (!code.matches(prefix + "[0-9]{1,9}")) throw new InputError(message);
         return Integer.parseInt(code.substring(prefix.length()));
     }
     private static LocalDate date(String raw) {
