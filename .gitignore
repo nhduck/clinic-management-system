@@ -3,3 +3,9 @@ tomcat.*/
 data/
 db.properties
 .vscode/
+
+.env
+.env.*
+!.env.example
+target/
+db.properties

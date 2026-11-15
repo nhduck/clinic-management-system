@@ -8,7 +8,7 @@ function notify(type, message) {
     S.msg = null;
     messageTimeout = null;
     var el = document.getElementById('notice');
-    if (el) el.remove();
+    if (el) { el.hidden = true; el.textContent = ''; }
   }, 7000);
 }
 
@@ -18,12 +18,3 @@ function clearNotice() {
   S.msg = null;
 }
 
-function M() {
-  return S.msg
-    ? '<div id="notice" role="alert" aria-live="polite" class="msg ' +
-        S.msg[0] +
-        '">' +
-        e(S.msg[1]) +
-        '</div>'
-    : '';
-}

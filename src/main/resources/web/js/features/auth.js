@@ -60,29 +60,3 @@ function logout() {
   R();
 }
 
-function authV() {
-  var i = S.tab == 'in';
-  return (
-    '<div class="auth"><div class="box"><div class="brand">PHÒNG KHÁM<small>Hệ thống quản lý bệnh án và kê đơn</small></div>' +
-    '<div class="tabs"><button class="' +
-    (i ? 'on' : '') +
-    '" onclick="T(\'in\')">Đăng nhập</button><button class="' +
-    (i ? '' : 'on') +
-    '" onclick="T(\'up\')">Đăng ký</button></div>' +
-    (i
-      ? ''
-      : '<label>Họ và tên</label><input id="n" placeholder="Nguyễn Văn A"><label>Vai trò</label><select id="r"><option>Bác sĩ</option><option>Lễ tân</option><option>Quản trị</option></select>') +
-    '<label>Tên đăng nhập</label><input id="u" placeholder="bacsi" autocomplete="username"><label>Mật khẩu</label><input id="p" type="password" placeholder="Tối thiểu 6 ký tự">' +
-    (i ? '' : '<label>Nhập lại mật khẩu</label><input id="p2" type="password">') +
-    M() +
-    '<div class="bar"><button class="btn" style="flex:1" onclick="' +
-    (i ? 'login()' : 'reg()') +
-    '">' +
-    (i ? 'Đăng nhập' : 'Tạo tài khoản') +
-    '</button></div>' +
-    (i
-      ? '<p style="font-size:12px;color:var(--mu)">Tài khoản demo (chưa có xác thực backend): <b>bacsi</b>, <b>letan</b>, <b>admin</b> / <b>123456</b></p>'
-      : '') +
-    '</div></div>'
-  );
-}
