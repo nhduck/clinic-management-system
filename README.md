@@ -13,7 +13,7 @@ Docker Desktop, JDK 17+, Maven. Lần chạy Maven đầu tiên cần Internet.
        mvn clean compile exec:java
    Mở http://localhost:8080 (đăng nhập demo `bacsi` / `123456`).
 3. Chạy bản console của phần lịch khám:
-       mvn -q compile exec:java "-Dexec.mainClass=com.phongkham.ui.LichKhamConsole"
+       mvn -q compile exec:java "-Dexec.mainClass=clinic.console.LichKhamConsole"
    (Windows nếu bị lỗi dấu tiếng Việt: `chcp 65001` trước khi chạy.)
 
 Hoặc nhấp đúp `CHAY_WINDOWS.cmd` (bật DB + web).
@@ -35,10 +35,20 @@ Lưu ý: các file trong `db/init/` chỉ chạy khi volume còn trống. Sửa 
 
 ## Cấu trúc
 - `db/init/` schema + dữ liệu mẫu (nguồn sự thật duy nhất của DB); `db/scripts/` script phụ.
-- `src/main/java/com/phongkham/` model / dao / service / ui(console) / util (phần lịch khám).
-- `src/main/java/vn/clinic/` web: `WebServer`, `ApiServlet` (API bệnh án, đơn thuốc, danh mục thuốc), `Database`.
-- `src/main/resources/web/` giao diện HTML/CSS/JS.
-- Cả hai phần dùng chung `com.phongkham.util.DBConnection`.
+- `src/main/java/clinic/WebServer.java`: khởi động web; `Main.java`: kiểm tra kết nối DB.
+- `src/main/java/clinic/config/`: kết nối và kiểm tra cơ sở dữ liệu.
+- `src/main/java/clinic/model/`: lớp dữ liệu.
+- `src/main/java/clinic/dao/`: DAO và câu lệnh SQL.
+- `src/main/java/clinic/service/`: xử lý nghiệp vụ.
+- `src/main/java/clinic/servlet/`: Servlet nhận yêu cầu web và phục vụ giao diện.
+- `src/main/java/clinic/console/`: giao diện terminal.
+- `src/main/java/clinic/exception/`: lỗi nghiệp vụ.
+- `src/main/java/clinic/util/`: hàm hỗ trợ.
+- `src/main/resources/web/`: HTML và CSS; `app.js` chỉ khởi động và dựng màn hình.
+- `src/main/resources/web/js/core/`: trạng thái, API, điều hướng, thông báo và tiện ích dùng chung.
+- `src/main/resources/web/js/features/`: các file JavaScript theo từng chức năng.
+- `docs/diagrams/`: sơ đồ phân tích; `docs/use-cases/`: đặc tả Use Case.
+- Cả hai phần dùng chung `clinic.config.DBConnection`.
 
 ## Điểm khác so với bản SQLite trước đây (phần bệnh án / kê đơn)
 - Bệnh án gắn với **lịch khám** (`benh_an.ma_lk`): chỉ lập được cho bệnh nhân có lịch khám chưa hủy, chưa có bệnh án, đúng ngày chọn. Lập xong lịch chuyển sang "Đã khám". Với dữ liệu mẫu: BN003 / BN006 ngày 16/11/2026 (hoặc tự đặt lịch trước bằng console).
@@ -49,4 +59,5 @@ Lưu ý: các file trong `db/init/` chỉ chạy khi volume còn trống. Sửa 
 
 ## Chưa làm
 - Đăng nhập vẫn là demo phía trình duyệt, chưa dùng bảng `tai_khoan`.
-- Trang quản lý bệnh nhân / lịch khám của giao diện web vẫn lưu trong bộ nhớ JavaScript; chưa gọi `LichKhamService`.
+- Thao tác thêm/sửa/xóa bệnh nhân, bác sĩ và chuyên khoa trên web còn là demo JavaScript.
+- Đặt/xem/cập nhật/hủy lịch khám trên web đã gọi API Java và dùng chung `LichKhamService` với console.
