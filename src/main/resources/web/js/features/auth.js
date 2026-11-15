@@ -23,9 +23,11 @@ async function login() {
   clearNotice();
   try {
     await loadData();
+    sessionStorage.setItem('clinicDemoUser', f.u);
     R();
   } catch (err) {
     S.me = null;
+    sessionStorage.removeItem('clinicDemoUser');
     notify('e', 'Không kết nối được PostgreSQL/API: ' + err.message);
     R();
   }
@@ -54,9 +56,34 @@ function reg() {
 }
 
 function logout() {
+  sessionStorage.removeItem('clinicDemoUser');
   S.me = null;
   S.tab = 'in';
+  S.v = 'home';
+  $('p').value = '';
   clearNotice();
+  R();
+}
+
+// Khôi phục phiên DEMO khi F5 trong cùng tab. Không lưu mật khẩu.
+async function restoreDemoSession() {
+  const username = sessionStorage.getItem('clinicDemoUser');
+  if (!username) return;
+  const user = S.users.find(x => x.u === username);
+  if (!user) {
+    sessionStorage.removeItem('clinicDemoUser');
+    return;
+  }
+  try {
+    await loadData();
+    S.me = user;
+    S.v = 'home';
+    clearNotice();
+  } catch (err) {
+    sessionStorage.removeItem('clinicDemoUser');
+    S.me = null;
+    notify('e', 'Không khôi phục được phiên demo: ' + err.message);
+  }
   R();
 }
 

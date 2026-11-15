@@ -112,7 +112,10 @@ function renderAuth() {
   $('auth-extra').hidden=!signup;$('auth-password-confirm').hidden=!signup;$('auth-demo').hidden=signup;
   $('auth-in').classList.toggle('on',!signup);$('auth-up').classList.toggle('on',signup);
   setText('auth-submit',signup?'Tạo tài khoản':'Đăng nhập');
-  const note=$('auth-notice');note.replaceChildren();if(S.msg){note.textContent=S.msg[1];note.className='msg '+S.msg[0];}
+  const note=$('auth-notice');
+  note.hidden=!!S.me || !S.msg;
+  note.className=S.msg?'msg '+S.msg[0]:'';
+  note.textContent=S.msg?S.msg[1]:'';
 }
 function R() {
   renderAuth();if(!S.me)return;
@@ -140,3 +143,4 @@ bind('doc-save','click',saveDemoDoctor);bind('doc-cancel','click',()=>{S.editDoc
 bind('specialty-save','click',addDemoSpecialty);
 document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>go(el.dataset.go)));
 R();
+restoreDemoSession();

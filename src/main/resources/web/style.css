@@ -365,3 +365,8 @@ select option {
 select:required:invalid {
   color: #82979b;
 }
+
+/* Navigation links should look like menu items, not standard links. */
+aside a, aside a:hover, aside a:focus, aside a:visited {
+  text-decoration: none;
+}
