@@ -8,6 +8,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import com.phongkham.model.LichKham;
+import com.phongkham.model.LichLamViec;
+import com.phongkham.service.LichKhamService;
+import com.phongkham.service.NghiepVuException;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -23,6 +29,8 @@ import java.util.Map;
 
 public class ApiServlet extends HttpServlet {
     private static final Gson JSON = new Gson();
+    // Dùng chung LichKhamService với bản console: một bộ quy tắc nghiệp vụ duy nhất cho lịch khám
+    private static final LichKhamService LICH_KHAM = new LichKhamService();
     private static class InputError extends RuntimeException {
         InputError(String message) { super(message); }
     }
@@ -32,6 +40,7 @@ public class ApiServlet extends HttpServlet {
         try {
             switch (req.getPathInfo() == null ? "" : req.getPathInfo()) {
                 case "/data" -> send(resp, 200, loadData());
+                case "/slots" -> send(resp, 200, slots(req));
                 case "/health" -> {
                     try (Connection c = Database.connect()) {
                         send(resp, 200, Map.of("status", "ok", "database", c.isValid(3) ? "connected" : "unavailable"));
@@ -39,6 +48,8 @@ public class ApiServlet extends HttpServlet {
                 }
                 default -> send(resp, 404, Map.of("error", "API không tồn tại"));
             }
+        } catch (NghiepVuException ex) {
+            businessError(resp, ex);
         } catch (SQLException ex) {
             ex.printStackTrace();
             send(resp, 500, Map.of("error", "Không đọc được PostgreSQL. Kiểm tra container (docker compose ps) và log Java."));
@@ -55,8 +66,18 @@ public class ApiServlet extends HttpServlet {
                 case "/records" -> send(resp, 201, addRecord(body));
                 case "/prescriptions" -> send(resp, 201, addPrescription(body));
                 case "/drugs" -> send(resp, 201, createDrug(body));
-                default -> send(resp, 404, Map.of("error", "API không tồn tại"));
+                case "/appointments" -> send(resp, 201, createAppointment(body));
+                default -> {
+                    String path = req.getPathInfo() == null ? "" : req.getPathInfo();
+                    if (path.matches("/appointments/LK[0-9]{1,9}/cancel")) {
+                        send(resp, 200, cancelAppointment(path.split("/")[2]));
+                    } else {
+                        send(resp, 404, Map.of("error", "API không tồn tại"));
+                    }
+                }
             }
+        } catch (NghiepVuException ex) {
+            businessError(resp, ex);
         } catch (InputError | IllegalStateException | UnsupportedOperationException | DateTimeParseException | NumberFormatException ex) {
             send(resp, 400, Map.of("error", ex.getMessage() == null ? "Dữ liệu không hợp lệ" : ex.getMessage()));
         } catch (SQLException ex) {
@@ -77,10 +98,18 @@ public class ApiServlet extends HttpServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         req.setCharacterEncoding("UTF-8");
         try {
-            int id = drugIdFromPath(req.getPathInfo());
+            String path = req.getPathInfo() == null ? "" : req.getPathInfo();
+            if (path.matches("/appointments/LK[0-9]{1,9}")) {
+                JsonObject apptBody = JsonParser.parseReader(req.getReader()).getAsJsonObject();
+                send(resp, 200, updateAppointment(path.substring("/appointments/".length()), apptBody));
+                return;
+            }
+            int id = drugIdFromPath(path);
             JsonObject body = JsonParser.parseReader(req.getReader()).getAsJsonObject();
             send(resp, 200, updateDrug(id, body));
-        } catch (InputError | IllegalStateException | UnsupportedOperationException | NumberFormatException ex) {
+        } catch (NghiepVuException ex) {
+            businessError(resp, ex);
+        } catch (InputError | IllegalStateException | UnsupportedOperationException | DateTimeParseException | NumberFormatException ex) {
             send(resp, 400, Map.of("error", ex.getMessage() == null ? "Dữ liệu không hợp lệ" : ex.getMessage()));
         } catch (SQLException ex) {
             databaseError(resp, ex);
@@ -163,7 +192,7 @@ public class ApiServlet extends HttpServlet {
         }
     }
 
-    private Map<String, Object> loadData() throws SQLException {
+    private Map<String, Object> loadData() throws SQLException, NghiepVuException {
         List<Map<String, Object>> patients = new ArrayList<>();
         List<Map<String, Object>> records = new ArrayList<>();
         List<Map<String, Object>> prescriptions = new ArrayList<>();
@@ -223,7 +252,8 @@ public class ApiServlet extends HttpServlet {
         }
         List<String> drugNames = drugItems.stream().map(x -> (String) x.get("name")).toList();
         return Map.of("pts", patients, "drugs", drugNames, "drugItems", drugItems,
-                      "recs", records, "rx", prescriptions);
+                      "recs", records, "rx", prescriptions,
+                      "shifts", shiftList(), "appts", appointmentList());
     }
 
     /**
@@ -352,6 +382,109 @@ public class ApiServlet extends HttpServlet {
                 throw ex;
             }
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Lịch khám: đặt / xem / cập nhật / hủy / giờ trống (gọi LichKhamService)
+    // ------------------------------------------------------------------
+    private static String appointmentCode(int id) { return String.format("LK%03d", id); }
+    private static String doctorCode(int id) { return String.format("BS%03d", id); }
+
+    private static Map<String, Object> appointmentJson(LichKham lk) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", appointmentCode(lk.getMaLk()));
+        m.put("pid", patientCode(lk.getMaBn()));
+        m.put("pn", lk.getTenBenhNhan());
+        m.put("bs", doctorCode(lk.getMaBs()));
+        m.put("dn", "BS. " + lk.getTenBacSi());
+        m.put("shift", lk.getMaLlv());
+        m.put("date", lk.getNgayGioKham().toLocalDate().toString());
+        m.put("time", lk.getNgayGioKham().toLocalTime().toString());
+        m.put("reason", nz(lk.getLyDoKham()));
+        m.put("status", lk.getTrangThai());
+        return m;
+    }
+
+    private static List<Map<String, Object>> appointmentList() throws NghiepVuException {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (LichKham lk : LICH_KHAM.timKiem(null, null, null)) list.add(appointmentJson(lk));
+        return list;
+    }
+
+    /** Các ca làm việc còn Mở từ hôm nay trở đi (để chọn khi đặt lịch). */
+    private static List<Map<String, Object>> shiftList() throws NghiepVuException {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (LichLamViec c : LICH_KHAM.layCaLamViec(LocalDate.now(), null)) {
+            if (!LichLamViec.MO.equals(c.getTrangThai())) continue;
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", c.getMaLlv());
+            m.put("bs", doctorCode(c.getMaBs()));
+            m.put("dn", "BS. " + c.getTenBacSi());
+            m.put("date", c.getNgayLam().toString());
+            m.put("from", c.getGioBatDau().toString());
+            m.put("to", c.getGioKetThuc().toString());
+            m.put("slot", c.getThoiLuongSlot());
+            list.add(m);
+        }
+        return list;
+    }
+
+    /** GET /api/slots?shift=ID: các giờ còn trống của một ca làm việc. */
+    private static List<String> slots(HttpServletRequest req) throws NghiepVuException {
+        int shift;
+        try {
+            shift = Integer.parseInt(String.valueOf(req.getParameter("shift")));
+        } catch (NumberFormatException ex) {
+            throw new NghiepVuException("Mã ca làm việc không hợp lệ.");
+        }
+        return LICH_KHAM.layGioTrong(shift).stream().map(LocalTime::toString).toList();
+    }
+
+    private Map<String, Object> createAppointment(JsonObject body) throws NghiepVuException {
+        int maBn = parseCode(required(body, "pid", 20), "BN", "Mã bệnh nhân không hợp lệ");
+        int shift = intField(body, "shift");
+        LocalTime time = timeField(body, "time");
+        String reason = optional(body, "reason", 255);
+        return appointmentJson(LICH_KHAM.datLich(maBn, shift, time, reason.isEmpty() ? null : reason));
+    }
+
+    private Map<String, Object> updateAppointment(String code, JsonObject body) throws NghiepVuException {
+        int maLk = parseCode(code, "LK", "Mã lịch khám không hợp lệ");
+        int shift = intField(body, "shift");
+        LocalTime time = timeField(body, "time");
+        String reason = optional(body, "reason", 255);
+        return appointmentJson(LICH_KHAM.doiLich(maLk, shift, time, reason.isEmpty() ? null : reason));
+    }
+
+    private Map<String, Object> cancelAppointment(String code) throws NghiepVuException {
+        int maLk = parseCode(code, "LK", "Mã lịch khám không hợp lệ");
+        LICH_KHAM.huyLich(maLk);
+        return Map.of("id", code, "status", LichKham.DA_HUY);
+    }
+
+    private static int intField(JsonObject x, String key) {
+        try {
+            return Integer.parseInt(required(x, key, 12));
+        } catch (NumberFormatException ex) {
+            throw new InputError("Trường " + key + " phải là số");
+        }
+    }
+
+    private static LocalTime timeField(JsonObject x, String key) {
+        try {
+            return LocalTime.parse(required(x, key, 5));
+        } catch (DateTimeParseException ex) {
+            throw new InputError("Giờ khám không hợp lệ (định dạng HH:mm)");
+        }
+    }
+
+    /** Lỗi nghiệp vụ: 404 nếu không tìm thấy, 500 nếu là lỗi database, còn lại 400. */
+    private static void businessError(HttpServletResponse resp, NghiepVuException ex) throws IOException {
+        String msg = ex.getMessage() == null ? "Lỗi nghiệp vụ" : ex.getMessage();
+        int status = 400;
+        if (msg.startsWith("Không tìm thấy")) status = 404;
+        if (msg.startsWith("Lỗi cơ sở dữ liệu")) { status = 500; ex.printStackTrace(); }
+        send(resp, status, Map.of("error", msg));
     }
 
     private static String patientCode(int id) { return String.format("BN%03d", id); }
