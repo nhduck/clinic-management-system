@@ -97,3 +97,63 @@ async function cancelAppointment(id) {
   }
   R();
 }
+
+//lọc lịch theo ngày/bác sĩ
+function appointmentDoctors() {
+  var m = {};
+  S.appointments.concat(S.shifts).forEach((x) => {
+    m[x.bs] = x.dn;
+  });
+  return Object.keys(m)
+    .sort()
+    .map((k) => [k, m[k]]);
+}
+
+function filteredAppointments() {
+  var f = S.afilt;
+  return sortedAppointments().filter((a) => (!f.date || a.date === f.date) && (!f.bs || a.bs === f.bs));
+}
+
+function setAppointmentFilter() {
+  syncAppointmentForm();
+  S.afilt = { date: $('flt-date').value, bs: $('flt-bs').value };
+  R();
+}
+
+function clearAppointmentFilter() {
+  syncAppointmentForm();
+  S.afilt = { date: '', bs: '' };
+  R();
+}
+
+//Bác sĩ xem lịch khám của mình
+function myAppointments() {
+  var f = S.myfilt;
+  return S.appointments
+    .filter((a) => a.bs === S.me.bs && (!f.date || a.date === f.date) && (!f.status || a.status === f.status))
+    .sort((x, y) => (x.date + x.time < y.date + y.time ? -1 : 1));
+}
+
+function setMyFilter() {
+  S.myfilt = { date: $('my-date').value, status: $('my-status').value };
+  R();
+}
+
+function myToday() {
+  S.myfilt = { date: today(), status: S.myfilt.status };
+  R();
+}
+
+function clearMyFilter() {
+  S.myfilt = { date: '', status: '' };
+  R();
+}
+
+// Từ lịch "Chờ khám" mở sẵn form Lập bệnh án đúng bệnh nhân và ngày khám
+function startRecordFromAppointment(id) {
+  var a = S.appointments.find((x) => x.id === id);
+  if (!a) return;
+  go('new');
+  $('f1').value = a.pid;
+  $('f2').value = a.date;
+}

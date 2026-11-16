@@ -1,5 +1,5 @@
 // Chuyển trang và kiểm tra vai trò demo (không thay thế phân quyền backend).
-var NAV_DOCTOR = [['home','Trang chủ'],['rec','Danh sách bệnh án'],['new','Lập bệnh án'],['rxn','Kê đơn thuốc'],['rxl','Đơn thuốc'],['drugs','Quản lý thuốc']];
+var NAV_DOCTOR = [['home','Trang chủ'],['myappts','Lịch khám của tôi'],['rec','Danh sách bệnh án'],['new','Lập bệnh án'],['rxn','Kê đơn thuốc'],['rxl','Đơn thuốc'],['drugs','Quản lý thuốc']];
 var NAV_RECEPTION = [['home','Trang chủ'],['patients','Quản lý bệnh nhân'],['appointments','Lịch khám']];
 var NAV_ADMIN = [['home','Trang chủ'],['doctors','Quản lý bác sĩ'],['specialties','Chuyên khoa'],['accounts','Tài khoản (demo)']];
 function currentNav() { return S.me.r === 'Quản trị' ? NAV_ADMIN : S.me.r === 'Lễ tân' ? NAV_RECEPTION : NAV_DOCTOR; }

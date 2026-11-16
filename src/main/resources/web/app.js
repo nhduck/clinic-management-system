@@ -59,9 +59,19 @@ function renderAppointments() {
   setOptions('app-shift', S.shifts.map(s => [s.id, shiftLabel(s)]), f.shift, 'Chọn ca làm việc');
   setOptions('app-time', S.slots.map(t => [t, t]), f.time, !f.shift ? 'Chọn ca làm việc trước' : S.slots.length ? 'Chọn giờ' : 'Hết chỗ trong ca này');
   $('app-reason').value = f.reason || '';
-  setText('appointments-count', 'Danh sách lịch (' + S.appointments.length + ')');
-  fillRows('appointments-body', sortedAppointments(), a => [a.id, a.pn, a.dn, fd(a.date) + ' · ' + a.time, a.status, a.reason || '', a.status === 'Chờ khám' ? actions(actionButton('Sửa', editAppointment, a.id, true), actionButton('Hủy lịch', cancelAppointment, a.id, true)) : '']);
+  const list = filteredAppointments(), flt = S.afilt;
+  setOptions('flt-bs', appointmentDoctors(), flt.bs, 'Tất cả bác sĩ'); $('flt-date').value = flt.date;
+  setText('appointments-count', 'Danh sách lịch (' + list.length + (flt.date || flt.bs ? ' / ' + S.appointments.length : '') + ')');
+  fillRows('appointments-body', list, a => [a.id, a.pn, a.dn, fd(a.date) + ' · ' + a.time, a.status, a.reason || '', a.status === 'Chờ khám' ? actions(actionButton('Sửa', editAppointment, a.id, true), actionButton('Hủy lịch', cancelAppointment, a.id, true)) : ''], 'Không có lịch khám phù hợp.');
 }
+
+function renderMyAppointments() {
+  const f = S.myfilt, list = myAppointments();
+  $('my-date').value = f.date; $('my-status').value = f.status;
+  setText('my-count', 'Lịch khám của ' + S.me.n + ' (' + list.length + ')');
+  fillRows('my-body', list, a => [a.id, a.pn, fd(a.date) + ' · ' + a.time, a.status, a.reason || '', a.status === 'Chờ khám' ? actionButton('Lập bệnh án', startRecordFromAppointment, a.id) : ''], S.me.bs ? 'Không có lịch khám phù hợp.' : 'Tài khoản này chưa gắn với bác sĩ trong CSDL.');
+}
+
 function filteredRecords() {
   return S.recs.filter(r => { const p = pt(r.pid); return !S.q || (r.id + ' ' + (p?.n || '') + ' ' + r.dx).toLowerCase().includes(S.q.toLowerCase()); });
 }
@@ -126,13 +136,15 @@ function R() {
   currentNav().forEach(([v, label]) => { const a = document.createElement('a'); a.textContent = label; a.href = '#' + v; a.classList.toggle('on', v === active); a.addEventListener('click', ev => { ev.preventDefault(); go(v); }); nav.append(a); });
   document.querySelectorAll('[data-view]').forEach(el => el.hidden = el.dataset.view !== S.v);
   const note = $('notice'); note.hidden = !S.msg; note.className = S.msg ? 'msg ' + S.msg[0] : ''; note.textContent = S.msg ? S.msg[1] : '';
-  ({ home: renderHome, patients: renderPatients, appointments: renderAppointments, rec: renderRecords, new: renderNewRecord, det: renderRecordDetail, rxn: renderNewPrescription, rxl: renderPrescriptions, rxv: renderPrescriptionDetail, drugs: renderDrugs, doctors: renderDoctors, specialties: renderSpecialties, accounts: renderAccounts }[S.v] || renderHome)();
+  ({ home: renderHome, patients: renderPatients, appointments: renderAppointments, myappts: renderMyAppointments, rec: renderRecords, new: renderNewRecord, det: renderRecordDetail, rxn: renderNewPrescription, rxl: renderPrescriptions, rxv: renderPrescriptionDetail, drugs: renderDrugs, doctors: renderDoctors, specialties: renderSpecialties, accounts: renderAccounts }[S.v] || renderHome)();
 }
 function bind(id, event, handler) { $(id).addEventListener(event, handler); }
 bind('auth-in', 'click', () => T('in')); bind('auth-up', 'click', () => T('up')); bind('auth-submit', 'click', () => S.tab === 'in' ? login() : reg()); bind('logout-btn', 'click', logout);
 bind('pat-save', 'click', saveDemoPatient); bind('pat-cancel', 'click', () => { S.editPatient = null; R(); });
 bind('pat-search', 'input', ev => { S.q = ev.target.value; renderPatientsRowsOnly(); });
 function renderPatientsRowsOnly() { const q = S.q.toLowerCase(), rows = allPatients().filter(x => (x.id + ' ' + x.n).toLowerCase().includes(q)); setText('pat-count', `Danh sách bệnh nhân (${rows.length})`); fillRows('patients-body', rows, x => [x.id, x.n, fd(x.dob), x.g || '—', S.uiPatients.some(t => t.id === x.id) ? actions(actionButton('Sửa', id => { S.editPatient = id; R(); }, x.id, true), actionButton('Xóa', deleteDemoPatient, x.id, true)) : 'Đọc từ PostgreSQL']); }
+bind('flt-date', 'change', setAppointmentFilter); bind('flt-bs', 'change', setAppointmentFilter); bind('flt-clear', 'click', clearAppointmentFilter);
+bind('my-date', 'change', setMyFilter); bind('my-status', 'change', setMyFilter); bind('my-today', 'click', myToday); bind('my-clear', 'click', clearMyFilter);
 bind('app-shift', 'change', pickShift); bind('appointment-save', 'click', saveAppointment); bind('appointment-cancel-edit', 'click', cancelEdit);
 bind('rec-search', 'input', ev => { S.q = ev.target.value; fillRows('tb', filteredRecords(), r => [r.id, pt(r.pid)?.n || '—', fd(r.date), r.dx, rxOf(r.id) ? 'Đã kê đơn' : 'Chưa có', actionButton('Xem', id => go('det', id), r.id)], 'Không tìm thấy bệnh án.'); });
 bind('rec-save', 'click', saveRec); bind('detail-prescribe', 'click', () => { const id = S.sel; go('rxn'); S.rr = id; R(); });
