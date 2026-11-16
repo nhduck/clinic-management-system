@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Phòng khám – Bệnh án và Kê đơn</title>
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        if (sessionStorage.getItem('clinicDemoUser')) {
+            document.documentElement.classList.add('restoring-session');
+        }
+    </script>
+</head>
+
+<body>
+    <section id="auth-screen" class="auth">
+        <div id="session-loading">
+            <div class="loading-content">
+                <h2>PHÒNG KHÁM</h2>
+                <p>Đang khôi phục phiên làm việc...</p>
+            </div>
+        </div>
+        <div class="box">
+            <div class="brand">PHÒNG KHÁM<small>Hệ thống quản lý bệnh án và kê đơn</small></div>
+            <div class="tabs"><button id="auth-in" type="button">Đăng nhập</button><button id="auth-up"
+                    type="button">Đăng ký</button></div>
+            <div id="auth-extra" hidden><label>Họ và tên</label><input id="n" placeholder="Nguyễn Văn A"><label>Vai
+                    trò</label><select id="r">
+                    <option>Bác sĩ</option>
+                    <option>Lễ tân</option>
+                    <option>Quản trị</option>
+                </select></div><label>Tên đăng nhập</label><input id="u" placeholder="bacsi"
+                autocomplete="username"><label>Mật khẩu</label><input id="p" type="password"
+                placeholder="Tối thiểu 6 ký tự">
+            <div id="auth-password-confirm" hidden><label>Nhập lại mật khẩu</label><input id="p2" type="password"></div>
+            <div id="auth-notice" role="alert" aria-live="polite" hidden></div>
+            <div class="bar"><button id="auth-submit" class="btn" style="flex:1">Đăng nhập</button></div>
+            <p id="auth-demo" style="font-size:12px;color:var(--mu)">Tài khoản demo (không phải xác thực backend):
+                <b>bacsi</b>, <b>letan</b>, <b>admin</b> / <b>123456</b></p>
+        </div>
+    </section>
+    <div id="app" class="shell" hidden>
+        <aside>
+            <div class="brand">PHÒNG KHÁM<small id="role-label">Menu chính</small></div>
+            <nav id="main-nav"></nav>
+        </aside>
+        <main>
+            <header><span>Xin chào, <b id="user-name"></b> · <span id="user-role"></span></span><button id="logout-btn"
+                    class="btn o s">Đăng xuất</button></header>
+            <div class="pg">
+                <div id="notice" role="alert" aria-live="polite" hidden></div>
+                <div id="demo-warning" class="demo-note" hidden><b>Giao diện demo:</b> Các thao tác Lễ tân / Admin chỉ
+                    lưu trong bộ nhớ trình duyệt ở những mục có ghi DEMO. Chưa có phân quyền backend. Không nhập dữ liệu
+                    thật.</div>
+                <section id="view-home" data-view="home">
+                    <h2 id="home-title">Trang chủ</h2>
+                    <div id="home-stats" class="grid"></div>
+                    <div class="panel"><b>Thao tác nhanh</b>
+                        <div id="home-actions" class="bar"></div>
+                    </div>
+                </section>
+                <section data-view="patients" hidden>
+                    <h2>Quản lý bệnh nhân</h2>
+                    <div class="panel">
+                        <h3 id="pat-heading">Thêm bệnh nhân demo</h3>
+                        <div class="row">
+                            <div><label>Họ tên</label><input id="pat-name" placeholder="Nguyễn Văn A"></div>
+                            <div><label>Ngày sinh</label><input id="pat-dob" type="date"></div>
+                            <div><label>Giới tính</label><select id="pat-gender">
+                                    <option value="">Chọn giới tính</option>
+                                    <option>Nam</option>
+                                    <option>Nữ</option>
+                                    <option>Khác</option>
+                                </select></div>
+                            <div><label>Số điện thoại (demo)</label><input id="pat-phone" placeholder="09xxxxxxxx">
+                            </div>
+                        </div>
+                        <div class="bar"><button class="btn" id="pat-save">Thêm bệnh nhân</button><button class="btn o"
+                                id="pat-cancel" hidden>Hủy</button></div>
+                    </div>
+                    <h3 id="pat-count">Danh sách bệnh nhân</h3>
+                    <div class="top"><input id="pat-search" placeholder="Tìm mã hoặc tên bệnh nhân..."></div>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Họ tên</th>
+                                    <th>Ngày sinh</th>
+                                    <th>Giới tính</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patients-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section data-view="appointments" hidden>
+                    <h2>Quản lý lịch khám</h2>
+                    <div class="panel">
+                        <h3 id="appointment-heading">Đặt lịch khám</h3>
+                        <div class="row">
+                            <div><label>Bệnh nhân</label><select id="app-patient">
+                                    <option value="">Chọn bệnh nhân</option>
+                                </select></div>
+                            <div><label>Ca làm việc (ngày · bác sĩ)</label><select id="app-shift">
+                                    <option value="">Chọn ca làm việc</option>
+                                </select></div>
+                            <div><label>Giờ khám (còn trống)</label><select id="app-time">
+                                    <option value="">Chọn ca làm việc trước</option>
+                                </select></div>
+                            <div><label>Lý do khám</label><input id="app-reason" placeholder="Ví dụ: ho, sốt 3 ngày">
+                            </div>
+                        </div>
+                        <div class="bar"><button id="appointment-save" class="btn">Đặt lịch</button><button
+                                id="appointment-cancel-edit" class="btn o" hidden>Hủy sửa</button></div>
+                    </div>
+                    <h3 id="appointments-count">Danh sách lịch</h3>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Bệnh nhân</th>
+                                    <th>Bác sĩ</th>
+                                    <th>Ngày · Giờ</th>
+                                    <th>Trạng thái</th>
+                                    <th>Lý do</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointments-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section data-view="rec" hidden>
+                    <h2>Danh sách bệnh án</h2>
+                    <div class="top"><input id="rec-search"
+                            placeholder="Tìm theo mã, tên bệnh nhân, chẩn đoán..."><button class="btn" data-go="new">+
+                            Lập bệnh án</button></div>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Bệnh nhân</th>
+                                    <th>Ngày khám</th>
+                                    <th>Chẩn đoán</th>
+                                    <th>Đơn thuốc</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tb"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section data-view="new" hidden>
+                    <h2>Lập bệnh án</h2>
+                    <div class="panel">
+                        <div class="row">
+                            <div><label>Bệnh nhân</label><select id="f1" required>
+                                    <option value="">Chọn bệnh nhân</option>
+                                </select></div>
+                            <div><label>Ngày khám</label><input id="f2" type="date"></div>
+                        </div><label>Triệu chứng</label><textarea id="f3" rows="3"></textarea><label>Chẩn
+                            đoán</label><input id="f4"><label>Ghi chú / lời dặn</label><textarea id="f5"
+                            rows="2"></textarea>
+                        <div class="bar"><button class="btn" id="rec-save">Lưu bệnh án</button><button class="btn o"
+                                data-go="rec">Hủy</button></div>
+                    </div>
+                </section>
+                <section data-view="det" hidden>
+                    <h2 id="detail-heading">Chi tiết bệnh án</h2>
+                    <div class="panel">
+                        <div class="kv"><span>Bệnh nhân</span><span id="detail-patient"></span><span>Ngày
+                                khám</span><span id="detail-date"></span><span>Triệu chứng</span><span
+                                id="detail-sym"></span><span>Chẩn đoán</span><span id="detail-dx"></span><span>Ghi
+                                chú</span><span id="detail-note"></span></div>
+                    </div>
+                    <h3>Đơn thuốc</h3>
+                    <div id="detail-prescription"></div>
+                    <h3>Lịch sử khám của bệnh nhân</h3>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Ngày</th>
+                                    <th>Chẩn đoán</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="detail-history"></tbody>
+                        </table>
+                    </div>
+                    <div class="bar"><button class="btn" id="detail-prescribe">Kê đơn</button><button class="btn o"
+                            data-go="rec">Quay lại</button></div>
+                </section>
+                <section data-view="rxn" hidden>
+                    <h2>Kê đơn thuốc</h2>
+                    <div class="panel"><label>Bệnh án (chưa có đơn)</label><select id="rr" required>
+                            <option value="">Chọn bệnh án</option>
+                        </select>
+                        <p id="rx-diagnosis"></p>
+                        <h3>Thêm thuốc</h3>
+                        <div class="row">
+                            <div><label>Thuốc</label><select id="d1">
+                                    <option value="">Chọn thuốc</option>
+                                </select></div>
+                            <div><label>Cách dùng</label><select id="d4">
+                                    <option value="">Chọn cách dùng</option>
+                                    <option>Sau ăn</option>
+                                    <option>Trước ăn</option>
+                                    <option>Trong bữa ăn</option>
+                                    <option>Trước khi ngủ</option>
+                                </select></div>
+                            <div><label>Liều dùng</label><select id="d2select">
+                                    <option value="">Chọn liều dùng</option>
+                                    <option value="1 viên/ngày">1 viên/ngày</option>
+                                    <option value="2 viên/ngày">2 viên/ngày</option>
+                                    <option value="3 viên/ngày">3 viên/ngày</option>
+                                    <option value="1 viên/lần, 2 lần/ngày">1 viên/lần, 2 lần/ngày</option>
+                                    <option value="1 viên/lần, 3 lần/ngày">1 viên/lần, 3 lần/ngày</option>
+                                    <option value="custom">Tự nhập...</option>
+                                </select>
+                                <div id="dose-custom" hidden><label>Nhập liều dùng khác</label><input id="d2manual"
+                                        placeholder="Ví dụ: 1/2 viên/lần, 2 lần/ngày"></div>
+                            </div>
+                            <div><label>Số lượng</label><input id="d3" type="number" min="1" value="10"></div>
+                        </div>
+                        <div class="bar"><button class="btn o" id="rx-add">+ Thêm vào đơn</button></div>
+                    </div>
+                    <h3 id="rx-count">Các thuốc trong đơn</h3>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Thuốc</th>
+                                    <th>Liều dùng</th>
+                                    <th>SL</th>
+                                    <th>Cách dùng</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="rx-lines"></tbody>
+                        </table>
+                    </div>
+                    <div class="bar"><button class="btn" id="rx-save">Lưu đơn thuốc</button><button class="btn o"
+                            data-go="home">Hủy</button></div>
+                </section>
+                <section data-view="rxl" hidden>
+                    <h2>Đơn thuốc</h2>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Bệnh án</th>
+                                    <th>Bệnh nhân</th>
+                                    <th>Ngày</th>
+                                    <th>Số thuốc</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="prescriptions-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section data-view="rxv" hidden>
+                    <h2 id="rx-detail-heading">Đơn thuốc</h2>
+                    <div class="panel">
+                        <div class="kv"><span>Bệnh nhân</span><span id="rx-detail-patient"></span><span>Bệnh
+                                án</span><span id="rx-detail-record"></span><span>Ngày kê</span><span
+                                id="rx-detail-date"></span></div>
+                    </div>
+                    <h3>Danh sách thuốc</h3>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Thuốc</th>
+                                    <th>Liều dùng</th>
+                                    <th>SL</th>
+                                    <th>Cách dùng</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rx-detail-lines"></tbody>
+                        </table>
+                    </div>
+                    <div class="bar"><button class="btn o" data-go="rxl">Quay lại</button></div>
+                </section>
+                <section data-view="drugs" hidden>
+                    <h2>Quản lý danh mục thuốc</h2>
+                    <div class="panel">
+                        <h3>Thêm / sửa thuốc</h3><input id="drug-id" type="hidden"><label for="drug-name">Tên
+                            thuốc</label><input id="drug-name" maxlength="100" placeholder="Ví dụ: Paracetamol 500mg">
+                        <div class="bar"><button class="btn" id="drug-submit">Thêm thuốc</button><button class="btn o"
+                                id="drug-cancel" hidden>Hủy sửa</button></div>
+                    </div>
+                    <h3 id="drug-count">Danh sách thuốc</h3>
+                    <p class="drug-note">Xóa / đổi tên trong danh mục không làm thay đổi đơn thuốc cũ đã lưu.</p>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Tên thuốc</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drugs-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section data-view="doctors" hidden>
+                    <h2>Quản lý bác sĩ</h2>
+                    <div class="panel">
+                        <h3 id="doctor-heading">Thêm bác sĩ demo</h3>
+                        <div class="row">
+                            <div><label>Họ tên</label><input id="doc-name" placeholder="BS. Nguyễn Văn A"></div>
+                            <div><label>Chuyên khoa</label><select id="doc-specialty">
+                                    <option value="">Chọn chuyên khoa</option>
+                                </select></div>
+                            <div><label>Điện thoại</label><input id="doc-phone" placeholder="09xxxxxxxx"></div>
+                        </div>
+                        <div class="bar"><button class="btn" id="doc-save">Thêm bác sĩ</button><button class="btn o"
+                                id="doc-cancel" hidden>Hủy sửa</button></div>
+                    </div>
+                    <h3>Danh sách bác sĩ</h3>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Họ tên</th>
+                                    <th>Chuyên khoa</th>
+                                    <th>Điện thoại</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doctors-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section data-view="specialties" hidden>
+                    <h2>Quản lý chuyên khoa</h2>
+                    <div class="panel"><label>Tên chuyên khoa mới</label><input id="specialty-name"
+                            placeholder="Ví dụ: Tim mạch">
+                        <div class="bar"><button id="specialty-save" class="btn">Thêm chuyên khoa</button></div>
+                    </div>
+                    <h3>Danh sách chuyên khoa</h3>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tên chuyên khoa</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="specialties-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section data-view="accounts" hidden>
+                    <h2>Tài khoản người dùng (demo)</h2>
+                    <p class="drug-note">Đây là danh sách tài khoản hardcode phía frontend, KHÔNG phải phân quyền hay
+                        xác thực an toàn.</p>
+                    <div class="tw">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tài khoản</th>
+                                    <th>Tên hiển thị</th>
+                                    <th>Vai trò</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accounts-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="panel">
+                        <h3>Hướng tích hợp</h3>
+                        <p>Đăng nhập / tài khoản cần backend xác thực thực tế. Khi tích hợp, kiểm tra quyền ở Java
+                            Servlet.</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script src="/js/core/state.js" defer></script>
+    <script src="/js/core/api.js" defer></script>
+    <script src="/js/core/utils.js" defer></script>
+    <script src="/js/core/notifications.js" defer></script>
+    <script src="/js/core/navigation.js" defer></script>
+    <script src="/js/features/auth.js" defer></script>
+    <script src="/js/features/dashboard.js" defer></script>
+    <script src="/js/features/patients.js" defer></script>
+    <script src="/js/features/appointments.js" defer></script>
+    <script src="/js/features/records.js" defer></script>
+    <script src="/js/features/prescriptions.js" defer></script>
+    <script src="/js/features/drugs.js" defer></script>
+    <script src="/js/features/doctors.js" defer></script>
+    <script src="/js/features/specialties.js" defer></script>
+    <script src="/js/features/accounts.js" defer></script>
+    <script src="/app.js" defer></script>
+</body>
+
+</html>
