@@ -2,27 +2,16 @@
 cd /d "%~dp0"
 where docker >nul 2>nul
 if errorlevel 1 (
-  echo Chua co Docker Desktop. Xem README.md
+  echo Chua co Docker Desktop.
   pause
   exit /b 1
 )
-where mvn >nul 2>nul
+echo Khoi dong ung dung va PostgreSQL...
+docker compose up -d --build --wait
 if errorlevel 1 (
-  if exist "C:\Tools\apache-maven-3.10.0\bin\mvn.cmd" (
-    set "PATH=C:\Tools\apache-maven-3.10.0\bin;%PATH%"
-  ) else (
-    echo Maven chua co PATH. Xem README.md
-    pause
-    exit /b 1
-  )
-)
-echo Khoi dong PostgreSQL (Docker)...
-docker compose up -d --wait
-if errorlevel 1 (
-  echo Khong khoi dong duoc database. Hay mo Docker Desktop truoc.
+  echo Khoi dong that bai. Kiem tra Docker Desktop va docker compose logs.
   pause
   exit /b 1
 )
-echo Khoi dong web: http://localhost:8080
-call mvn clean compile exec:java
+echo Mo trinh duyet tai http://localhost:8080
 pause
