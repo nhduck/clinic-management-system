@@ -9,3 +9,5 @@ db.properties
 !.env.example
 target/
 db.properties
+
+server/target/

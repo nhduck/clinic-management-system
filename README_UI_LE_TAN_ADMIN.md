@@ -13,13 +13,10 @@
 - Đây là phần giao diện bổ sung để Đức (bệnh nhân/admin) và Đạt (lịch khám) tích hợp API sau này; không tự nhận đã hoàn thiện module nghiệp vụ của hai bạn.
 
 ## Chạy trên Windows/VS Code
-1. Mở thư mục dự án có `pom.xml` và `docker-compose.yml`.
-2. Bật Docker Desktop, chạy `docker compose up -d --wait`, sau đó mở PowerShell:
-   ```powershell
-   $env:Path = "C:\Tools\apache-maven-3.10.0\bin;$env:Path"
-   mvn clean compile exec:java
-   ```
-3. Truy cập http://localhost:8080. Cấu hình PostgreSQL xem trong `README.md`.
+1. Mở thư mục gốc chứa `docker-compose.yml`, `client/` và `server/`.
+2. Bật Docker Desktop.
+3. Chạy `docker compose up -d --build --wait` hoặc nhấp đúp `CHAY_WINDOWS.cmd`.
+4. Truy cập http://localhost:8080.
 
 ## Test UI Lễ tân
 1. Đăng nhập `letan/123456`, xác nhận chỉ thấy menu Lễ tân.

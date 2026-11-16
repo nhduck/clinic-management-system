@@ -1,0 +1,11 @@
+package clinic.shared.exception;
+
+public class NghiepVuException extends Exception {
+    public NghiepVuException(String message) {
+        super(message);
+    }
+
+    public NghiepVuException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
