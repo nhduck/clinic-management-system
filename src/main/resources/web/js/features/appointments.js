@@ -10,46 +10,6 @@ function sortedAppointments() {
   return w.sort((x, y) => (k(x) < k(y) ? -1 : 1)).concat(o.sort((x, y) => (k(x) < k(y) ? 1 : -1)));
 }
 
-function appointmentV() {
-  var f = S.af,
-    edit = S.editAppointment;
-  var pOpts = S.pts
-    .map(
-      (p) =>
-        `<option value="${e(p.id)}"${f.pid === p.id ? ' selected' : ''}>${e(p.id + ' – ' + p.n)}</option>`
-    )
-    .join('');
-  var sOpts = S.shifts
-    .map(
-      (s) =>
-        `<option value="${s.id}"${String(f.shift) === String(s.id) ? ' selected' : ''}>${e(shiftLabel(s))}</option>`
-    )
-    .join('');
-  var tOpts = S.slots
-    .map((t) => `<option${f.time === t ? ' selected' : ''}>${t}</option>`)
-    .join('');
-  var tHint = !f.shift
-    ? 'Chọn ca làm việc trước'
-    : S.slots.length
-      ? 'Chọn giờ'
-      : 'Hết chỗ trong ca này';
-  var rows = sortedAppointments()
-    .map(
-      (a) =>
-        `<tr><td>${e(a.id)}</td><td>${e(a.pn)}</td><td>${e(a.dn)}</td><td>${fd(a.date)} · ${e(a.time)}</td><td>${e(a.status)}</td><td>${e(a.reason || '')}</td><td>${a.status === 'Chờ khám' ? `<button class="btn o s" onclick="editAppointment('${a.id}')">Sửa</button> <button class="btn o s" onclick="cancelAppointment('${a.id}')">Hủy lịch</button>` : ''}</td></tr>`
-    )
-    .join('');
-  return (
-    `<h2>Quản lý lịch khám</h2><div class="panel"><h3>${edit ? 'Cập nhật lịch khám ' + e(edit) : 'Đặt lịch khám'}</h3><div class="row">` +
-    `<div><label>Bệnh nhân</label><select id="app-patient"${edit ? ' disabled' : ''}><option value="" disabled hidden${f.pid ? '' : ' selected'}>Chọn bệnh nhân</option>${pOpts}</select></div>` +
-    `<div><label>Ca làm việc (ngày · bác sĩ)</label><select id="app-shift" onchange="pickShift()"><option value="" disabled hidden${f.shift ? '' : ' selected'}>Chọn ca làm việc</option>${sOpts}</select></div>` +
-    `<div><label>Giờ khám (còn trống)</label><select id="app-time"><option value="" disabled hidden${f.time ? '' : ' selected'}>${tHint}</option>${tOpts}</select></div>` +
-    `<div><label>Lý do khám</label><input id="app-reason" value="${e(f.reason || '')}" placeholder="Ví dụ: ho, sốt 3 ngày"></div></div>` +
-    `<div class="bar"><button class="btn" onclick="saveAppointment()">${edit ? 'Lưu thay đổi' : 'Đặt lịch'}</button>${edit ? '<button class="btn o" onclick="cancelEdit()">Hủy sửa</button>' : ''}</div></div>` +
-    `<h3>Danh sách lịch (${S.appointments.length})</h3><div class="tw"><table><tr><th>Mã</th><th>Bệnh nhân</th><th>Bác sĩ</th><th>Ngày · Giờ</th><th>Trạng thái</th><th>Lý do</th><th>Thao tác</th></tr>${rows}</table></div>`
-  );
-}
-
 function syncAppointmentForm() {
   var p = $('app-patient'),
     s = $('app-shift'),

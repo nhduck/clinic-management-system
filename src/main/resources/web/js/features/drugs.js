@@ -56,35 +56,3 @@ async function removeDrug(id) {
   }
 }
 
-function drugV() {
-  return (
-    '<h2>Quản lý danh mục thuốc</h2>' +
-    '<div class="panel"><h3>Thêm / sửa thuốc</h3><input type="hidden" id="drug-id">' +
-    '<label for="drug-name">Tên thuốc</label><input id="drug-name" maxlength="100" placeholder="Ví dụ: Paracetamol 500mg">' +
-    '<div class="bar"><button id="drug-submit" class="btn" onclick="saveDrug()">Thêm thuốc</button>' +
-    '<button id="drug-cancel" hidden class="btn o" onclick="cancelDrug()">Hủy sửa</button></div></div>' +
-    '<h3>Danh sách thuốc (' +
-    S.drugItems.length +
-    ')</h3>' +
-    '<p class="drug-note">Xóa / đổi tên trong danh mục không làm thay đổi đơn thuốc cũ đã lưu.</p>' +
-    '<div class="tw"><table><tr><th>Mã</th><th>Tên thuốc</th><th>Thao tác</th></tr>' +
-    (S.drugItems.length
-      ? S.drugItems
-          .map(function (x) {
-            return (
-              '<tr><td>T' +
-              String(x.id).padStart(3, '0') +
-              '</td><td>' +
-              e(x.name) +
-              '</td><td><div class="bar action-bar"><button class="btn o s" onclick="editDrug(' +
-              x.id +
-              ')">Sửa</button><button class="btn o s" onclick="removeDrug(' +
-              x.id +
-              ')">Xóa</button></div></td></tr>'
-            );
-          })
-          .join('')
-      : '<tr><td colspan="3">Chưa có thuốc nào.</td></tr>') +
-    '</table></div>'
-  );
-}

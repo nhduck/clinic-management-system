@@ -1,0 +1,12 @@
+.git
+.gitignore
+.vscode
+target
+*.zip
+*.log
+.env
+.env.*
+!*.env.example
+db.properties
+README*
+docs

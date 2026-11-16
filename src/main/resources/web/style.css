@@ -365,3 +365,33 @@ select option {
 select:required:invalid {
   color: #82979b;
 }
+
+/* Navigation links should look like menu items, not standard links. */
+aside a, aside a:hover, aside a:focus, aside a:visited {
+  text-decoration: none;
+}
+
+/* Ẩn loading khi không khôi phục phiên */
+#session-loading {
+  display: none;
+}
+
+/* Ẩn trang đăng nhập trong lúc khôi phục */
+html.restoring-session #auth-screen,
+html.restoring-session #app {
+  display: none !important;
+}
+
+/* Hiển thị màn hình loading */
+html.restoring-session #session-loading {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: #e0f7fa;
+  text-align: center;
+}
+
+.loading-content {
+  color: #0097a7;
+}

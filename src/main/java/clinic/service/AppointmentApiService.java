@@ -5,7 +5,6 @@ import static clinic.util.JsonInput.*;
 
 import com.google.gson.JsonObject;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 import clinic.exception.NghiepVuException;
 import clinic.model.LichKham;
@@ -56,10 +55,10 @@ public class AppointmentApiService {
         return list;
     }
 
-    public static List<String> slots(HttpServletRequest req) throws NghiepVuException {
+    public static List<String> slots(String shiftParam) throws NghiepVuException {
         int shift;
         try {
-            shift = Integer.parseInt(String.valueOf(req.getParameter("shift")));
+            shift = Integer.parseInt(shiftParam);
         } catch (NumberFormatException ex) {
             throw new NghiepVuException("Mã ca làm việc không hợp lệ.");
         }

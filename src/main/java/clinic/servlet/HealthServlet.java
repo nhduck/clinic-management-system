@@ -2,30 +2,15 @@ package clinic.servlet;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import clinic.config.Database;
-
+import clinic.service.HealthService;
 import java.io.IOException;
-import java.sql.Connection;
-import java.util.Map;
 
+/** HTTP adapter for the health service. */
 public class HealthServlet extends BaseApiServlet {
+    private final HealthService health = new HealthService();
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        execute(
-                req,
-                resp,
-                () -> {
-                    try (Connection connection = Database.connect()) {
-                        send(
-                                resp,
-                                200,
-                                Map.of(
-                                        "status",
-                                        "ok",
-                                        "database",
-                                        connection.isValid(3) ? "connected" : "unavailable"));
-                    }
-                });
+        execute(req, resp, () -> send(resp, 200, health.status()));
     }
 }
