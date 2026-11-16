@@ -10,15 +10,15 @@ Tài liệu bổ sung cho dự án **Hệ thống quản lý phòng khám** (Jav
 ## Cấu trúc cần biết
 | Đường dẫn | Vai trò |
 |---|---|
-| `src/main/resources/web/index.html` | Khung giao diện, form, bảng, các màn hình tĩnh |
-| `src/main/resources/web/style.css` | Giao diện, màu sắc, liên kết menu và responsive |
-| `src/main/resources/web/app.js` | Hiển thị dữ liệu động, khởi tạo giao diện |
-| `src/main/resources/web/js/core/` | State, API, navigation, notifications, utils |
-| `src/main/resources/web/js/features/` | Sự kiện và logic từng tính năng |
-| `src/main/java/clinic/servlet/` | Nhận HTTP request, trả JSON |
-| `src/main/java/clinic/service/` | Xử lý nghiệp vụ |
-| `src/main/java/clinic/dao/` | SQL/JDBC |
-| `src/main/java/clinic/WebServer.java` | Khởi chạy Embedded Tomcat |
+| `client/index.html` | Khung giao diện, form, bảng, các màn hình tĩnh |
+| `client/style.css` | Giao diện, màu sắc, liên kết menu và responsive |
+| `client/app.js` | Hiển thị dữ liệu động, khởi tạo giao diện |
+| `client/js/shared/` | State, API, navigation, notifications, utils |
+| `client/js/services/` | Sự kiện và logic từng tính năng |
+| `server/src/main/java/clinic/services/*/servlet/` | Nhận HTTP request, trả JSON |
+| `server/src/main/java/clinic/services/*/service/` | Xử lý nghiệp vụ |
+| `server/src/main/java/clinic/services/*/dao/` | SQL/JDBC |
+| `server/src/main/java/clinic/WebServer.java` | Khởi chạy Embedded Tomcat |
 | `db/init/` | Schema và dữ liệu mẫu, chạy khi tạo volume DB mới |
 | `Dockerfile` | Multi-stage Maven build và Java runtime |
 | `docker-compose.yml` | Khởi động `db` và `app`, khai báo healthcheck/volume |
@@ -37,7 +37,7 @@ Tài liệu bổ sung cho dự án **Hệ thống quản lý phòng khám** (Jav
 
    Nếu `docker info` không kết nối được daemon, cần cấu hình Docker-in-Docker cho devcontainer rồi rebuild Codespace. Không tiếp tục chạy Compose khi daemon chưa hoạt động.
 
-3. Tại thư mục có `Dockerfile`, `docker-compose.yml`, `pom.xml`:
+3. Tại thư mục có `Dockerfile`, `docker-compose.yml`, `server/pom.xml`:
 
    ```bash
    cp -n .env.example .env
@@ -126,11 +126,11 @@ Nếu còn **thay đổi chưa commit**: commit đúng các file đã sửa trư
 Ví dụ chỉ stage 5 file sửa UI:
 
 ```bash
-git add src/main/resources/web/app.js \
-  src/main/resources/web/index.html \
-  src/main/resources/web/js/core/notifications.js \
-  src/main/resources/web/js/features/auth.js \
-  src/main/resources/web/style.css
+git add client/app.js \
+  client/index.html \
+  client/js/shared/notifications.js \
+  client/js/services/auth.js \
+  client/style.css
 
 git diff --cached --name-only
 git diff --cached --check
