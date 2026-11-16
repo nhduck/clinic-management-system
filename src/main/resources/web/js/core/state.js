@@ -1,4 +1,3 @@
-// Frontend từ prototype, đã nối API Java Servlet.
 var S = {
   tab: 'in',
   msg: null,
@@ -23,8 +22,10 @@ var S = {
   shifts: [],
   slots: [],
   af: { pid: '', shift: '', time: '', reason: '' },
+  afilt: { date: '', bs: '' },
+  myfilt: { date: '', status: '' },
   doctors: [
-    { id: 'BS001', n: 'BS. Nguyễn Văn An', specialty: 'Nội tổng quát', phone: '0900000000' }
+    { u: 'bacsi', p: '123456', n: 'BS. Nguyễn Văn Minh', r: 'Bác sĩ', bs: 'BS001' },
   ],
   specialties: ['Nội tổng quát', 'Nhi khoa', 'Da liễu'],
   uiAccounts: [],
