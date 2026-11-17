@@ -17,7 +17,13 @@ import java.util.Properties;
  */
 public final class DBConnection {
 
-    private static final String DEFAULT_URL = "jdbc:postgresql://localhost:5432/phong_kham";
+    private static final String DEFAULT_URL =
+            "jdbc:postgresql://"
+                    + System.getenv().getOrDefault("DB_HOST", "localhost")
+                    + ":"
+                    + System.getenv().getOrDefault("DB_INTERNAL_PORT", "5432")
+                    + "/"
+                    + System.getenv().getOrDefault("DB_NAME", "phong_kham");
     private static final String DEFAULT_USER = "pk_user";
     private static final String DEFAULT_PASSWORD = "pk_password";
 
