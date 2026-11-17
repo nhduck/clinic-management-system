@@ -6,7 +6,7 @@ WORKDIR /build/server
 COPY server/pom.xml ./pom.xml
 RUN mvn -B dependency:go-offline
 
-COPY server/clinic ./main/clinic
+COPY server/clinic ./main
 COPY client /build/client
 
 RUN mvn -B -DskipTests package
