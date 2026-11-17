@@ -2,6 +2,7 @@
 .gitignore
 .vscode
 target
+**/target
 *.zip
 *.log
 .env

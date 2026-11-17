@@ -5,6 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Phòng khám – Bệnh án và Kê đơn</title>
+    <meta name="theme-color" content="#E0E5EC">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles/style.css">
     <script>
         if (sessionStorage.getItem('clinicDemoUser')) {
@@ -21,8 +25,16 @@
                 <p>Đang khôi phục phiên làm việc...</p>
             </div>
         </div>
+        <div class="auth-story">
+            <div class="wordmark"><span class="brand-mark" aria-hidden="true">+</span><span>PHÒNG KHÁM<small>CHĂM SÓC TỪ NHỮNG ĐIỀU NHỎ</small></span></div>
+            <div class="auth-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit-core">+</div><span class="art-dot dot-one"></span><span class="art-dot dot-two"></span></div>
+            <div class="eyebrow">KHÔNG GIAN LÀM VIỆC CỦA BẠN</div>
+            <h1>Quản lý gọn gàng.<br>Chăm sóc tận tâm.</h1>
+            <p>Lịch khám, hồ sơ bệnh án và đơn thuốc.<br>Mọi thông tin cần thiết, trong một không gian.</p>
+            <div class="story-pills"><span>Đặt lịch khám</span><span>Hồ sơ bệnh án</span><span>Kê đơn thuốc</span></div>
+        </div>
         <div class="box">
-            <div class="brand">PHÒNG KHÁM<small>Hệ thống quản lý bệnh án và kê đơn</small></div>
+            <div class="auth-heading"><span class="brand-mark" aria-hidden="true">+</span><div class="eyebrow">HỆ THỐNG QUẢN LÝ PHÒNG KHÁM</div><h2 id="auth-title">Chào mừng trở lại</h2><p id="auth-subtitle">Đăng nhập để bắt đầu phiên làm việc.</p></div>
             <div class="tabs"><button id="auth-in" type="button">Đăng nhập</button><button id="auth-up"
                     type="button">Đăng ký</button></div>
             <div id="auth-extra" hidden><label>Họ và tên</label><input id="n" placeholder="Nguyễn Văn A"><label>Vai
@@ -41,24 +53,26 @@
         </div>
     </section>
     <div id="app" class="shell" hidden>
-        <aside>
-            <div class="brand">PHÒNG KHÁM<small id="role-label">Menu chính</small></div>
-            <nav id="main-nav"></nav>
+        <aside id="sidebar" aria-label="Điều hướng chính">
+            <div class="brand"><span class="brand-mark" aria-hidden="true">+</span><div>PHÒNG KHÁM<small id="role-label">Menu chính</small></div></div><div class="nav-caption">KHÔNG GIAN LÀM VIỆC</div>
+            <nav id="main-nav"></nav><div class="sidebar-foot"><span class="status-dot"></span> Quản lý phòng khám<small>Đặt lịch · Bệnh án · Kê đơn</small></div>
         </aside>
         <main>
-            <header><span>Xin chào, <b id="user-name"></b> · <span id="user-role"></span></span><button id="logout-btn"
-                    class="btn o s">Đăng xuất</button></header>
+            <header>
+                <div class="header-start"><button id="menu-toggle" class="icon-button menu-toggle" type="button" aria-label="Mở menu" aria-expanded="false" aria-controls="sidebar"><span></span><span></span><span></span></button><div class="breadcrumb">Không gian làm việc <span>/</span> <b id="current-page">Tổng quan</b></div></div>
+                <div class="header-user"><span class="user-avatar" id="user-avatar" aria-hidden="true">BS</span><div class="user-info"><b id="user-name"></b><span id="user-role"></span></div><button id="logout-btn" class="btn o s">Đăng xuất</button></div>
+            </header>
+            <button id="menu-backdrop" class="menu-backdrop" aria-label="Đóng menu" hidden></button>
             <div class="pg">
                 <div id="notice" role="alert" aria-live="polite" hidden></div>
                 <div id="demo-warning" class="demo-note" hidden><b>Giao diện demo:</b> Các thao tác Lễ tân / Admin chỉ
                     lưu trong bộ nhớ trình duyệt ở những mục có ghi DEMO. Chưa có phân quyền backend. Không nhập dữ liệu
                     thật.</div>
                 <section id="view-home" data-view="home">
-                    <h2 id="home-title">Trang chủ</h2>
+                    <div class="page-heading"><div><div class="eyebrow">BẢNG ĐIỀU KHIỂN</div><h2 id="home-title">Tổng quan phòng khám</h2><p class="page-description">Một góc nhìn rõ ràng cho ngày làm việc của bạn.</p></div><div class="date-chip" id="today-label"></div></div>
+                    <div class="welcome-panel"><div><span class="eyebrow">MỖI NGÀY, MỘT SỰ CHĂM SÓC TỐT HƠN</span><h3 id="welcome-name">Chào bạn!</h3><p>Theo dõi thông tin phòng khám và tiếp tục công việc từ đây.</p><button class="btn" id="welcome-action" type="button">Bắt đầu công việc</button></div><div class="welcome-art" aria-hidden="true"><div><span>+</span></div></div></div>
                     <div id="home-stats" class="grid"></div>
-                    <div class="panel"><b>Thao tác nhanh</b>
-                        <div id="home-actions" class="bar"></div>
-                    </div>
+                    <div class="dashboard-bottom"><div class="panel quick-panel"><div class="eyebrow">BẮT ĐẦU TỪ ĐÂY</div><h3>Thao tác nhanh</h3><p class="page-description">Các chức năng thường dùng trong ngày.</p><div id="home-actions" class="bar"></div></div><div class="panel activity-panel"><div class="eyebrow">THÔNG TIN GẦN ĐÂY</div><h3 id="activity-title">Bệnh án mới nhất</h3><div id="home-activity"></div></div></div>
                 </section>
                 <section data-view="patients" hidden>
                     <h2>Quản lý bệnh nhân</h2>
@@ -80,7 +94,7 @@
                                 id="pat-cancel" hidden>Hủy</button></div>
                     </div>
                     <h3 id="pat-count">Danh sách bệnh nhân</h3>
-                    <div class="top"><input id="pat-search" placeholder="Tìm mã hoặc tên bệnh nhân..."></div>
+                    <div class="top"><label class="sr-only" for="pat-search">Tìm bệnh nhân</label><input id="pat-search" placeholder="Tìm mã hoặc tên bệnh nhân..."></div>
                     <div class="tw">
                         <table>
                             <thead>
@@ -174,7 +188,7 @@
                 </section>
                 <section data-view="rec" hidden>
                     <h2>Danh sách bệnh án</h2>
-                    <div class="top"><input id="rec-search"
+                    <div class="top"><label class="sr-only" for="rec-search">Tìm bệnh án</label><input id="rec-search"
                             placeholder="Tìm theo mã, tên bệnh nhân, chẩn đoán..."><button class="btn" data-go="new">+
                             Lập bệnh án</button></div>
                     <div class="tw">
@@ -434,6 +448,7 @@
     <script src="/js/shared/notifications.js" defer></script>
     <script src="/js/shared/navigation.js" defer></script>
     <script src="/js/shared/dom.js" defer></script>
+    <script src="/js/shared/ui.js" defer></script>
     <script src="/js/features/auth.js" defer></script>
     <script src="/js/features/dashboard.js" defer></script>
     <script src="/js/features/patients.js" defer></script>

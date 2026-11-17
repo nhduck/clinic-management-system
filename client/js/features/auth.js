@@ -90,6 +90,8 @@ async function restoreDemoSession() {
 
 function renderAuth() {
   const signup = S.tab === "up";
+  setText("auth-title", signup ? "Tạo tài khoản mới" : "Chào mừng trở lại");
+  setText("auth-subtitle", signup ? "Điền thông tin để tạo tài khoản demo." : "Đăng nhập để bắt đầu phiên làm việc.");
   $("auth-screen").hidden = !!S.me;
   $("app").hidden = !S.me;
   $("auth-extra").hidden = !signup;

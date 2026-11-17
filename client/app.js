@@ -7,15 +7,22 @@ function R() {
   setText("user-role", S.me.r);
   $("demo-warning").hidden = S.me.r === "Bác sĩ";
   const active = S.v === "det" ? "rec" : S.v === "rxv" ? "rxl" : S.v;
+  setText("current-page", currentNav().find(([key]) => key === active)?.[1] || "Tổng quan");
+  setText("user-avatar", S.me.n.split(" ").slice(-2).map((x) => x[0]).join(""));
   const nav = $("main-nav");
   nav.replaceChildren();
   currentNav().forEach(([v, label]) => {
     const a = document.createElement("a");
-    a.textContent = label;
+    a.append(uiIcon(v));
+    const text = document.createElement("span");
+    text.textContent = label;
+    a.append(text);
+    if (v === active) a.setAttribute("aria-current", "page");
     a.href = "#" + v;
     a.classList.toggle("on", v === active);
     a.addEventListener("click", (ev) => {
       ev.preventDefault();
+      closeMenu();
       go(v);
     });
     nav.append(a);
@@ -43,6 +50,7 @@ function R() {
       accounts: renderAccounts,
     })[S.v] || renderHome
   )();
+  labelControls();
 }
 
 function bind(id, event, handler) {
@@ -110,6 +118,7 @@ bind("doc-cancel", "click", () => {
 });
 bind("specialty-save", "click", addDemoSpecialty);
 document.querySelectorAll("[data-go]").forEach((el) => el.addEventListener("click", () => go(el.dataset.go)));
+initUI();
 R();
 restoreDemoSession().finally(() => {
   document.documentElement.classList.remove("restoring-session");
