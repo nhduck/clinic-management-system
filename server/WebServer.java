@@ -18,8 +18,11 @@ public class WebServer {
         int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
         Database.initialize();
         Tomcat tomcat = new Tomcat();
-        tomcat.setBaseDir(System.getenv().getOrDefault("TOMCAT_BASE_DIR",
-                System.getProperty("java.io.tmpdir") + "/clinic-tomcat"));
+        tomcat.setBaseDir(
+                System.getenv()
+                        .getOrDefault(
+                                "TOMCAT_BASE_DIR",
+                                System.getProperty("java.io.tmpdir") + "/clinic-tomcat"));
         tomcat.setPort(port);
         tomcat.getConnector();
         Context ctx = tomcat.addContext("", System.getProperty("java.io.tmpdir"));

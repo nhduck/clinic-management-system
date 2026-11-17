@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="vi">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#E0E5EC" />
+
+        <title>Phòng khám – Bệnh án và Kê đơn</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="/css/common.css" />
+    </head>
+
+    <body data-page="medical-records">
+        <div id="page-loading" role="status">
+            <div class="loading-content">
+                <h2>PHÒNG KHÁM</h2>
+                <p>Đang tải trang...</p>
+            </div>
+        </div>
+        <div id="app" class="shell" hidden>
+            <aside id="sidebar" aria-label="Điều hướng chính">
+                <div class="brand">
+                    <span class="brand-mark" aria-hidden="true">+</span>
+
+                    <div>
+                        PHÒNG KHÁM
+                        <small id="role-label">Menu chính</small>
+                    </div>
+                </div>
+
+                <div class="nav-caption">KHÔNG GIAN LÀM VIỆC</div>
+
+                <nav id="main-nav"></nav>
+
+                <div class="sidebar-foot">
+                    <span class="status-dot"></span>
+                    Quản lý phòng khám
+                    <small>Đặt lịch · Bệnh án · Kê đơn</small>
+                </div>
+            </aside>
+
+            <main>
+                <header>
+                    <div class="header-start">
+                        <button
+                            id="menu-toggle"
+                            class="icon-button menu-toggle"
+                            type="button"
+                            aria-label="Mở menu"
+                            aria-expanded="false"
+                            aria-controls="sidebar"
+                        >
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+
+                        <div class="breadcrumb">
+                            Không gian làm việc
+                            <span>/</span>
+                            <b id="current-page">Tổng quan</b>
+                        </div>
+                    </div>
+
+                    <div class="header-user">
+                        <span id="user-avatar" class="user-avatar" aria-hidden="true">BS</span>
+
+                        <div class="user-info">
+                            <b id="user-name"></b>
+                            <span id="user-role"></span>
+                        </div>
+
+                        <button id="logout-btn" class="btn o s" type="button">Đăng xuất</button>
+                    </div>
+                </header>
+
+                <button
+                    id="menu-backdrop"
+                    class="menu-backdrop"
+                    type="button"
+                    aria-label="Đóng menu"
+                    hidden
+                ></button>
+
+                <div class="pg">
+                    <div id="notice" role="alert" aria-live="polite" hidden></div>
+
+                    <div id="demo-warning" class="demo-note" hidden>
+                        <b>Giao diện demo:</b>
+                        Các thao tác Lễ tân / Admin chỉ lưu trong bộ nhớ trình duyệt ở những mục có
+                        ghi DEMO. Chưa có phân quyền backend. Không nhập dữ liệu thật.
+                    </div>
+
+                    <section data-view="rec" hidden>
+                        <h2>Danh sách bệnh án</h2>
+                        <div class="top">
+                            <label class="sr-only" for="rec-search">Tìm bệnh án</label
+                            ><input
+                                id="rec-search"
+                                placeholder="Tìm theo mã, tên bệnh nhân, chẩn đoán..."
+                            /><button class="btn" data-go="new">+ Lập bệnh án</button>
+                        </div>
+                        <div class="tw">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Mã</th>
+                                        <th>Bệnh nhân</th>
+                                        <th>Ngày khám</th>
+                                        <th>Chẩn đoán</th>
+                                        <th>Đơn thuốc</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tb"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section data-view="new" hidden>
+                        <h2>Lập bệnh án</h2>
+                        <div class="panel">
+                            <div class="row">
+                                <div>
+                                    <label>Bệnh nhân</label
+                                    ><select id="f1" required>
+                                        <option value="">Chọn bệnh nhân</option>
+                                    </select>
+                                </div>
+                                <div><label>Ngày khám</label><input id="f2" type="date" /></div>
+                            </div>
+                            <label>Triệu chứng</label><textarea id="f3" rows="3"></textarea
+                            ><label>Chẩn đoán</label><input id="f4" /><label
+                                >Ghi chú / lời dặn</label
+                            ><textarea id="f5" rows="2"></textarea>
+                            <div class="bar">
+                                <button class="btn" id="rec-save">Lưu bệnh án</button
+                                ><button class="btn o" data-go="rec">Hủy</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section data-view="det" hidden>
+                        <h2 id="detail-heading">Chi tiết bệnh án</h2>
+                        <div class="panel">
+                            <div class="kv">
+                                <span>Bệnh nhân</span><span id="detail-patient"></span
+                                ><span>Ngày khám</span><span id="detail-date"></span
+                                ><span>Triệu chứng</span><span id="detail-sym"></span
+                                ><span>Chẩn đoán</span><span id="detail-dx"></span
+                                ><span>Ghi chú</span><span id="detail-note"></span>
+                            </div>
+                        </div>
+                        <h3>Đơn thuốc</h3>
+                        <div id="detail-prescription"></div>
+                        <h3>Lịch sử khám của bệnh nhân</h3>
+                        <div class="tw">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Mã</th>
+                                        <th>Ngày</th>
+                                        <th>Chẩn đoán</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-history"></tbody>
+                            </table>
+                        </div>
+                        <div class="bar">
+                            <button class="btn" id="detail-prescribe">Kê đơn</button
+                            ><button class="btn o" data-go="rec">Quay lại</button>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+        <script src="/js/shared/state.js" defer></script>
+        <script src="/js/shared/api.js" defer></script>
+        <script src="/js/shared/utils.js" defer></script>
+        <script src="/js/shared/notifications.js" defer></script>
+        <script src="/js/shared/navigation.js" defer></script>
+        <script src="/js/shared/dom.js" defer></script>
+        <script src="/js/shared/ui.js" defer></script>
+        <script src="/js/shared/patient-utils.js" defer></script>
+        <script src="/js/shared/prescription-utils.js" defer></script>
+        <script src="/js/shared/session.js" defer></script>
+        <script src="/js/medical-records.js" defer></script>
+        <script src="/js/app.js" defer></script>
+    </body>
+</html>
