@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <meta name="theme-color" content="#E0E5EC" />
+
+    <title>Đăng nhập – Phòng khám</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+
+    <link rel="stylesheet" href="/css/chung.css?v=2" />
+    <link rel="stylesheet" href="/css/dang-nhap.css?v=3" />
+</head>
+
+<body data-page="auth">
+    <section id="auth-screen" class="auth">
+        <div class="auth-story">
+            <div class="wordmark">
+                <span class="brand-mark" aria-hidden="true">+</span>
+
+                <span>
+                    PHÒNG KHÁM
+                    <small>CHĂM SÓC TỪ NHỮNG ĐIỀU NHỎ</small>
+                </span>
+            </div>
+
+            <div class="auth-art" aria-hidden="true">
+                <div class="orbit orbit-one"></div>
+                <div class="orbit orbit-two"></div>
+                <div class="orbit-core">+</div>
+
+                <span class="art-dot dot-one"></span>
+                <span class="art-dot dot-two"></span>
+            </div>
+
+            <div class="eyebrow">
+                KHÔNG GIAN LÀM VIỆC CỦA BẠN
+            </div>
+
+            <h1>
+                Quản lý gọn gàng.<br />
+                Chăm sóc tận tâm.
+            </h1>
+
+            <p>
+                Lịch khám, hồ sơ bệnh án và đơn thuốc.<br />
+                Mọi thông tin cần thiết, trong một không gian.
+            </p>
+
+            <div class="story-pills">
+                <span>Đặt lịch khám</span>
+                <span>Hồ sơ bệnh án</span>
+                <span>Kê đơn thuốc</span>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="auth-heading">
+                <span class="brand-mark" aria-hidden="true">+</span>
+
+                <div class="eyebrow">
+                    HỆ THỐNG QUẢN LÝ PHÒNG KHÁM
+                </div>
+
+                <h2 id="auth-title">Chào mừng trở lại</h2>
+
+                <p id="auth-subtitle">
+                    Đăng nhập để bắt đầu phiên làm việc.
+                </p>
+            </div>
+
+            <div class="tabs">
+                <button id="auth-in" type="button">
+                    Đăng nhập
+                </button>
+
+                <button id="auth-up" type="button">
+                    Đăng ký
+                </button>
+            </div>
+
+            <div id="auth-extra" hidden>
+                <label for="n">Họ và tên</label>
+
+                <input id="n" type="text" placeholder="Nguyễn Văn A" maxlength="100" autocomplete="name" />
+
+                <label for="r">Vai trò đăng ký</label>
+
+                <select id="r">
+                    <option value="BAC_SI">Bác sĩ</option>
+                    <option value="LE_TAN">Lễ tân</option>
+                </select>
+
+                <p class="drug-note">
+                    Sau khi đăng ký, tài khoản cần được quản trị viên
+                    duyệt trước khi đăng nhập.
+                </p>
+            </div>
+
+            <label for="u">Tên đăng nhập</label>
+
+            <input id="u" type="text" placeholder="Nhập tên đăng nhập" maxlength="50" autocomplete="username"
+                spellcheck="false" />
+
+            <label for="p">Mật khẩu</label>
+
+            <input id="p" type="password" placeholder="Tối thiểu 6 ký tự" maxlength="128" />
+
+            <div id="auth-password-confirm" hidden>
+                <label for="p2">Nhập lại mật khẩu</label>
+
+                <input id="p2" type="password" placeholder="Nhập lại mật khẩu" maxlength="128"
+                    autocomplete="new-password" />
+            </div>
+
+            <div id="auth-notice" role="alert" aria-live="polite" hidden></div>
+
+            <div class="bar">
+                <button id="auth-submit" class="btn" type="button" style="flex: 1">
+                    Đăng nhập
+                </button>
+            </div>
+
+            <p id="auth-demo" style="font-size: 12px; color: var(--mu)">
+                Tài khoản mẫu:
+                <b>admin</b>,
+                <b>letan01</b>,
+                <b>bs.minh</b>
+                / <b>123456</b>
+            </p>
+        </div>
+    </section>
+
+    <!-- Nạp mã xử lý giao diện -->
+    <script src="/js/shared/trang-thai.js" defer></script>
+    <script src="/js/shared/goi-api.js" defer></script>
+    <script src="/js/shared/tien-ich.js" defer></script>
+    <script src="/js/shared/thong-bao.js" defer></script>
+    <script src="/js/shared/dieu-huong.js" defer></script>
+    <script src="/js/shared/phan-tu.js" defer></script>
+    <script src="/js/shared/giao-dien.js" defer></script>
+    <script src="/js/shared/phien.js" defer></script>
+    <script src="/js/dang-nhap.js" defer></script>
+    <script src="/js/ung-dung.js" defer></script>
+</body>
+
+</html>

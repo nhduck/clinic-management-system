@@ -18,19 +18,43 @@ server {
     }
 
     location ~ ^/(login|register)/?$ {
-        try_files /pages/login.html =404;
+        try_files /pages/dang-nhap.html =404;
     }
 
     location ~ ^/(appointments|my-appointments)/?$ {
-        try_files /pages/appointments.html =404;
+        try_files /pages/lich-kham.html =404;
     }
 
-    location ~ ^/(medical-records|prescriptions)(/[^/]+)?/?$ {
-        try_files /pages/$1.html =404;
+    location ~ ^/medical-records(/[^/]+)?/?$ {
+        try_files /pages/benh-an.html =404;
     }
 
-    location ~ ^/(dashboard|patients|drugs|doctors|specialties|accounts)/?$ {
-        try_files /pages/$1.html =404;
+    location ~ ^/prescriptions(/[^/]+)?/?$ {
+        try_files /pages/don-thuoc.html =404;
+    }
+
+    location ~ ^/dashboard/?$ {
+        try_files /pages/tong-quan.html =404;
+    }
+
+    location ~ ^/patients/?$ {
+        try_files /pages/benh-nhan.html =404;
+    }
+
+    location ~ ^/drugs/?$ {
+        try_files /pages/thuoc.html =404;
+    }
+
+    location ~ ^/doctors/?$ {
+        try_files /pages/bac-si.html =404;
+    }
+
+    location ~ ^/specialties/?$ {
+        try_files /pages/chuyen-khoa.html =404;
+    }
+
+    location ~ ^/accounts/?$ {
+        try_files /pages/tai-khoan.html =404;
     }
 
     location / {
