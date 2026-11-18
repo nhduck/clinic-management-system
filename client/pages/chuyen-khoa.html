@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="vi">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#E0E5EC" />
+
+        <title>Phòng khám – Bệnh án và Kê đơn</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="/css/chung.css" />
+    </head>
+
+    <body data-page="specialties">
+        <div id="app" class="shell" hidden>
+            <!-- Điều hướng theo vai trò -->
+            <aside id="sidebar" aria-label="Điều hướng chính">
+                <div class="brand">
+                    <span class="brand-mark" aria-hidden="true">+</span>
+
+                    <div>
+                        PHÒNG KHÁM
+                        <small id="role-label">Menu chính</small>
+                    </div>
+                </div>
+
+                <div class="nav-caption">KHÔNG GIAN LÀM VIỆC</div>
+
+                <nav id="main-nav"></nav>
+
+                <div class="sidebar-foot">
+                    <span class="status-dot"></span>
+                    Quản lý phòng khám
+                    <small>Đặt lịch · Bệnh án · Kê đơn</small>
+                </div>
+            </aside>
+
+            <main>
+                <header>
+                    <div class="header-start">
+                        <button
+                            id="menu-toggle"
+                            class="icon-button menu-toggle"
+                            type="button"
+                            aria-label="Mở menu"
+                            aria-expanded="false"
+                            aria-controls="sidebar"
+                        >
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+
+                        <div class="breadcrumb">
+                            Không gian làm việc
+                            <span>/</span>
+                            <b id="current-page">Tổng quan</b>
+                        </div>
+                    </div>
+
+                    <div class="header-user">
+                        <span id="user-avatar" class="user-avatar" aria-hidden="true">BS</span>
+
+                        <div class="user-info">
+                            <b id="user-name"></b>
+                            <span id="user-role"></span>
+                        </div>
+
+                        <button id="logout-btn" class="btn o s" type="button">Đăng xuất</button>
+                    </div>
+                </header>
+
+                <button
+                    id="menu-backdrop"
+                    class="menu-backdrop"
+                    type="button"
+                    aria-label="Đóng menu"
+                    hidden
+                ></button>
+
+                <div class="pg">
+                    <div id="notice" role="alert" aria-live="polite" hidden></div>
+
+                    <!-- Nội dung màn hình -->
+                    <section data-view="specialties" hidden>
+                        <h2>Quản lý chuyên khoa</h2>
+                        <div class="panel">
+                            <label>Tên chuyên khoa mới</label
+                            ><input id="specialty-name" placeholder="Ví dụ: Tim mạch" />
+                            <div class="bar">
+                                <button id="specialty-save" class="btn">Thêm chuyên khoa</button>
+                            </div>
+                        </div>
+                        <h3>Danh sách chuyên khoa</h3>
+                        <div class="tw">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Tên chuyên khoa</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="specialties-body"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+        <!-- Nạp mã xử lý giao diện -->
+        <script src="/js/shared/trang-thai.js" defer></script>
+        <script src="/js/shared/goi-api.js" defer></script>
+        <script src="/js/shared/tien-ich.js" defer></script>
+        <script src="/js/shared/thong-bao.js" defer></script>
+        <script src="/js/shared/dieu-huong.js" defer></script>
+        <script src="/js/shared/phan-tu.js" defer></script>
+        <script src="/js/shared/giao-dien.js" defer></script>
+        <script src="/js/shared/tien-ich-benh-nhan.js" defer></script>
+        <script src="/js/shared/tien-ich-don-thuoc.js" defer></script>
+        <script src="/js/shared/phien.js" defer></script>
+        <script src="/js/chuyen-khoa.js" defer></script>
+        <script src="/js/ung-dung.js" defer></script>
+    </body>
+</html>

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="vi">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#E0E5EC" />
+
+        <title>Phòng khám – Bệnh án và Kê đơn</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="/css/chung.css" />
+
+        <link rel="stylesheet" href="/css/tong-quan.css" />
+    </head>
+
+    <body data-page="dashboard">
+        <div id="app" class="shell" hidden>
+            <!-- Điều hướng theo vai trò -->
+            <aside id="sidebar" aria-label="Điều hướng chính">
+                <div class="brand">
+                    <span class="brand-mark" aria-hidden="true">+</span>
+
+                    <div>
+                        PHÒNG KHÁM
+                        <small id="role-label">Menu chính</small>
+                    </div>
+                </div>
+
+                <div class="nav-caption">KHÔNG GIAN LÀM VIỆC</div>
+
+                <nav id="main-nav"></nav>
+
+                <div class="sidebar-foot">
+                    <span class="status-dot"></span>
+                    Quản lý phòng khám
+                    <small>Đặt lịch · Bệnh án · Kê đơn</small>
+                </div>
+            </aside>
+
+            <main>
+                <header>
+                    <div class="header-start">
+                        <button
+                            id="menu-toggle"
+                            class="icon-button menu-toggle"
+                            type="button"
+                            aria-label="Mở menu"
+                            aria-expanded="false"
+                            aria-controls="sidebar"
+                        >
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+
+                        <div class="breadcrumb">
+                            Không gian làm việc
+                            <span>/</span>
+                            <b id="current-page">Tổng quan</b>
+                        </div>
+                    </div>
+
+                    <div class="header-user">
+                        <span id="user-avatar" class="user-avatar" aria-hidden="true">BS</span>
+
+                        <div class="user-info">
+                            <b id="user-name"></b>
+                            <span id="user-role"></span>
+                        </div>
+
+                        <button id="logout-btn" class="btn o s" type="button">Đăng xuất</button>
+                    </div>
+                </header>
+
+                <button
+                    id="menu-backdrop"
+                    class="menu-backdrop"
+                    type="button"
+                    aria-label="Đóng menu"
+                    hidden
+                ></button>
+
+                <div class="pg">
+                    <div id="notice" role="alert" aria-live="polite" hidden></div>
+
+                    <section id="view-home" data-view="home">
+                        <div class="page-heading">
+                            <div>
+                                <div class="eyebrow">BẢNG ĐIỀU KHIỂN</div>
+                                <h2 id="home-title">Tổng quan phòng khám</h2>
+                                <p class="page-description">
+                                    Một góc nhìn rõ ràng cho ngày làm việc của bạn.
+                                </p>
+                            </div>
+                            <div class="date-chip" id="today-label"></div>
+                        </div>
+                        <div class="welcome-panel">
+                            <div>
+                                <span class="eyebrow">MỖI NGÀY, MỘT SỰ CHĂM SÓC TỐT HƠN</span>
+                                <h3 id="welcome-name">Chào bạn!</h3>
+                                <p>Theo dõi thông tin phòng khám và tiếp tục công việc từ đây.</p>
+                                <button class="btn" id="welcome-action" type="button">
+                                    Bắt đầu công việc
+                                </button>
+                            </div>
+                            <div class="welcome-art" aria-hidden="true">
+                                <div><span>+</span></div>
+                            </div>
+                        </div>
+                        <div id="home-stats" class="grid"></div>
+                        <div class="dashboard-bottom">
+                            <div class="panel quick-panel">
+                                <div class="eyebrow">BẮT ĐẦU TỪ ĐÂY</div>
+                                <h3>Thao tác nhanh</h3>
+                                <p class="page-description">
+                                    Các chức năng thường dùng trong ngày.
+                                </p>
+                                <div id="home-actions" class="bar"></div>
+                            </div>
+                            <div class="panel activity-panel">
+                                <div class="eyebrow">THÔNG TIN GẦN ĐÂY</div>
+                                <h3 id="activity-title">Bệnh án mới nhất</h3>
+                                <div id="home-activity"></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+        <!-- Nạp mã xử lý giao diện -->
+        <script src="/js/shared/trang-thai.js" defer></script>
+        <script src="/js/shared/goi-api.js" defer></script>
+        <script src="/js/shared/tien-ich.js" defer></script>
+        <script src="/js/shared/thong-bao.js" defer></script>
+        <script src="/js/shared/dieu-huong.js" defer></script>
+        <script src="/js/shared/phan-tu.js" defer></script>
+        <script src="/js/shared/giao-dien.js" defer></script>
+        <script src="/js/shared/tien-ich-benh-nhan.js" defer></script>
+        <script src="/js/shared/tien-ich-don-thuoc.js" defer></script>
+        <script src="/js/shared/phien.js" defer></script>
+        <script src="/js/tong-quan.js" defer></script>
+        <script src="/js/ung-dung.js" defer></script>
+    </body>
+</html>
