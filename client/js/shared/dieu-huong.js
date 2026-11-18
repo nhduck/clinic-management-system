@@ -2,8 +2,7 @@ var MENU_BAC_SI = [
     ["home", "Trang chủ"],
     ["myappts", "Lịch khám của tôi"],
     ["rec", "Bệnh án"],
-    ["rxl", "Đơn thuốc"],
-    ["drugs", "Quản lý thuốc"]
+    ["rxl", "Đơn thuốc"]
 ];
 
 var MENU_LE_TAN = [
@@ -16,6 +15,7 @@ var MENU_QUAN_TRI = [
     ["home", "Trang chủ"],
     ["doctors", "Quản lý bác sĩ"],
     ["specialties", "Chuyên khoa"],
+    ["drugs", "Quản lý thuốc"],
     ["accounts", "Tài khoản"]
 ];
 
@@ -162,13 +162,18 @@ function moTrang(loTrinh, thayThe = false) {
     }
 
     let diaChi;
+
     if (trang === "auth" && trangThai.tab === "up") {
         diaChi = "/register";
     } else {
         diaChi = duongDanTrang(trang, ma);
     }
 
-    if (trang === "appointments" && trangThai.trang !== trang && document.body.dataset.page === "appointments") {
+    if (
+        trang === "appointments" &&
+        trangThai.trang !== trang &&
+        document.body.dataset.page === "appointments"
+    ) {
         xoaFormLich();
     }
 
